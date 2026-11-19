@@ -26,11 +26,16 @@ import java.util.List;
 final class UnknownAnimations {
 
     /**
-     * How long after an animation a hitsplat of ours can still land.
+     * How long after an animation damage of ours can still turn up.
      * <p>
-     * Melee resolves on the tick itself, but a bow or a cast has to travel, so the experience arrives a few
-     * ticks later. Five covers the longest travel in the recorded raids with room to spare, and being
-     * generous costs at most an over-eager candidate in a report, never a measured number.
+     * Sized from the measured gap between an attack animation starting and our own next hitsplat landing,
+     * over the 44 recorded raids: scythe +1 in 85% of 4384 swings, blowpipe +0 in 86%, ZCB +2 in 60% and
+     * +3 in 25%, bow spread over +0 to +4. Five covers all of it.
+     * <p>
+     * Whether the experience itself arrives with the attack or with the hitsplat is NOT something this
+     * project has measured -- the event logger records no xp drops, so there is nothing to check it
+     * against. Five is wide enough either way, and the cost of being wide is at most an over-eager
+     * candidate in a report, never a measured number.
      */
     static final int WINDOW_TICKS = 5;
 

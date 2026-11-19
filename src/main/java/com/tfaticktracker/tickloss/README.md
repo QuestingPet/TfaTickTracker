@@ -676,8 +676,12 @@ noise inside one raid.
 What separates a weapon from a mechanic is whether the animation ever coincided with damage **we** dealt,
 which is what hitpoints experience means: every combat attack that connects grants it, and in a raid nothing
 else does (thralls deal damage and grant none). So `UnknownAnimations` holds a candidate for
-`WINDOW_TICKS` -- five, enough for a projectile to arrive -- and reports it only if hitpoints experience
-turns up in that window.
+`WINDOW_TICKS` and reports it only if hitpoints experience turns up in that window.
+
+Five, measured from the gap between an attack animation starting and our own next hitsplat across the 44
+raids: scythe +1 in 85% of 4384 swings, blowpipe +0 in 86%, ZCB +2 in 60% and +3 in 25%, bow spread over +0
+to +4. Whether the experience arrives with the attack or with the hitsplat is not something measured here --
+the logger records no xp drops -- and five is wide enough either way.
 
 **It cannot be the detector**, which is exactly why only the report uses it. A miss or a zero grants no
 experience, and a cooldown must still be re-seeded on a miss; a detector built on experience would ignore
