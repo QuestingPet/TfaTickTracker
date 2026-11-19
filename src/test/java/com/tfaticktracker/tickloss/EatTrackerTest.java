@@ -1,7 +1,9 @@
 package com.tfaticktracker.tickloss;
 
+import net.runelite.api.gameval.ItemID;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -44,5 +46,21 @@ public class EatTrackerTest {
         assertFalse(EatTracker.isFoodOption("Walk here"));
         assertFalse(EatTracker.isFoodOption("Withdraw-1"));
         assertFalse(EatTracker.isFoodOption("Cast"));
+    }
+
+    /**
+     * What a mouthful costs, now that there is no config field to correct it with.
+     * <p>
+     * Three ticks for food, two for combo food, and the table is fixed in code. Measured in
+     * {@code tfa-events-20261112-141632.log}: elder maul attacks at ticks 333 and 344 around a combo eat at
+     * 336, an eleven tick gap, which is the weapon's six plus a karambwan's two plus an anglerfish's three.
+     */
+    @Test
+    public void comboFoodCostsTwoTicksAndEverythingElseCostsThree() {
+        assertEquals(2, EatTracker.delayForItem(ItemID.TBWT_COOKED_KARAMBWAN));
+        assertEquals(2, EatTracker.delayForItem(ItemID.PLAIN_PIZZA));
+        assertEquals(3, EatTracker.delayForItem(ItemID.SHARK));
+        assertEquals("an item nobody has listed is ordinary food, not free",
+                3, EatTracker.delayForItem(-1));
     }
 }

@@ -16,14 +16,13 @@ import net.runelite.client.util.Text;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.ArrayDeque;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Set;
 
 /**
- * PROTOTYPE -- tick loss. Detects confirmed eats and how many ticks of attack delay each one costs.
+ * Detects confirmed eats and how many ticks of attack delay each one costs.
  * <p>
  * The click alone is not enough: it can be swallowed by a server tick or an inventory shuffle. Following the pattern
  * in the Gauntlet Performance Tracker, the intent is pushed on click and only confirmed once the inventory slot
@@ -34,7 +33,6 @@ import java.util.Set;
 @Singleton
 public class EatTracker {
 
-    static final int SLOW_FOOD_DELAY = 4;
     static final int DEFAULT_FOOD_DELAY = 3;
     static final int FAST_FOOD_DELAY = 2;
 
@@ -60,10 +58,13 @@ public class EatTracker {
     private final Deque<PendingEat> pending = new ArrayDeque<>();
 
     /**
-     * Combo food: a 2 tick delay rather than the usual 3, so it can be eaten alongside normal food. Config can add
-     * to this, but the common cases are here so it does not have to.
+     * Combo food: a 2 tick delay rather than the usual 3, so it can be eaten alongside normal food.
+     * <p>
+     * A fixed table rather than something a player types item ids into. Being missing from it costs one tick
+     * of over-reported loss on that eat and nothing else, which is not worth a settings field, and an id
+     * nobody can look up is not a setting anyone would ever fill in correctly.
      */
-    private static final Set<Integer> DEFAULT_FAST_FOOD = ImmutableSet.of(
+    private static final Set<Integer> FAST_FOOD = ImmutableSet.of(
             ItemID.TBWT_COOKED_KARAMBWAN,
             ItemID.BR_TBWT_COOKED_KARAMBWAN,
             ItemID.BLIGHTED_KARAMBWAN,
@@ -75,9 +76,6 @@ public class EatTracker {
             ItemID.HALF_ANCHOVIE_PIZZA,
             ItemID.PINEAPPLE_PIZZA,
             ItemID.HALF_PINEAPPLE_PIZZA);
-
-    private Set<Integer> fastFoodIds = DEFAULT_FAST_FOOD;
-    private Set<Integer> slowFoodIds = Collections.emptySet();
 
     /** Delay ticks from eats that have been confirmed but not yet charged against an attack gap. */
     @Getter
@@ -183,33 +181,13 @@ public class EatTracker {
     }
 
     /**
-     * How many ticks of attack delay this consumable costs.
+     * How many ticks of attack delay this mouthful costs.
      * <p>
-     * PROTOTYPE: everything is assumed to be a normal 3-tick eat. Combo foods (karambwan, pizza) are 2 and the slow
-     * foods are 4, but their item ids vary by noted/variant form, so rather than guess them the fast ones are listed
-     * in config and can be filled in from the debug overlay while testing.
+     * Three unless it is combo food, which is two. Shared with the log replay, which has the item ids from
+     * the MENU lines, so the recorded path and the live path cannot disagree about what a food costs.
      */
-    private int delayForItem(int itemId) {
-        if (fastFoodIds.contains(itemId)) return FAST_FOOD_DELAY;
-        if (slowFoodIds.contains(itemId)) return SLOW_FOOD_DELAY;
-        return DEFAULT_FOOD_DELAY;
+    static int delayForItem(int itemId) {
+        return FAST_FOOD.contains(itemId) ? FAST_FOOD_DELAY : DEFAULT_FOOD_DELAY;
     }
 
-    /**
-     * The delay this food costs with no config overrides applied. Shared with the log replay, which has the
-     * item ids from the MENU lines but none of the player's settings.
-     */
-    static int defaultDelayForItem(int itemId) {
-        return DEFAULT_FAST_FOOD.contains(itemId) ? FAST_FOOD_DELAY : DEFAULT_FOOD_DELAY;
-    }
-
-    /**
-     * Item ids that take {@link #FAST_FOOD_DELAY} / {@link #SLOW_FOOD_DELAY} instead of the default, from config.
-     */
-    public void setFoodOverrides(Set<Integer> fast, Set<Integer> slow) {
-        Set<Integer> mergedFast = new HashSet<>(DEFAULT_FAST_FOOD);
-        mergedFast.addAll(fast);
-        fastFoodIds = mergedFast;
-        slowFoodIds = new HashSet<>(slow);
-    }
 }

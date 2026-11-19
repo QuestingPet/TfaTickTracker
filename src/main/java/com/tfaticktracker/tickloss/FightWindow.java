@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * PROTOTYPE -- tick loss. The client-facing half of the fight window.
+ * The client-facing half of the fight window.
  * <p>
  * All this does is translate: RuneLite events and varbits in, {@link FightWindowState} calls out. Every rule
  * about whether a tick counts lives in that class, which has no client dependency and can therefore be driven

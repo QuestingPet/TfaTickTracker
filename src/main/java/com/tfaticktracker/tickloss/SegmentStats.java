@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * PROTOTYPE -- tick loss. Counters for one room, or one phase within a room.
+ * Counters for one room, or one phase within a room.
  * <p>
  * Lost ticks are the sum of how far each attack overshot its cooldown, never the window minus ticks used. The
  * difference matters because the raid resets your attack cooldown in places (freezing a Xarth corpse with the purging

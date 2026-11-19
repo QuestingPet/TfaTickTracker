@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
 
 import net.runelite.api.events.GameTick;
 import net.runelite.client.eventbus.Subscribe;
@@ -53,6 +54,8 @@ public class TickLossPanel extends PluginPanel {
     private static final Color MUTED = new Color(0x9E, 0x9E, 0x9E);
     /** Cards sit a shade ABOVE the sidebar rather than below it, which is what makes the text legible. */
     private static final Color CARD = new Color(0x32, 0x32, 0x32);
+    /** Sidebar-coloured space under each card, so one raider's block is visibly not the next one's. */
+    private static final int CARD_GAP = 8;
 
     private final TickLossTracker tracker;
     /** The revision last drawn, so a tick with no finished room costs nothing. */
@@ -204,7 +207,7 @@ public class TickLossPanel extends PluginPanel {
 
             final JPanel card = new JPanel(new BorderLayout());
             card.setBackground(CARD);
-            card.setBorder(new EmptyBorder(0, 0, 6, 0));
+            card.setBorder(new MatteBorder(0, 0, CARD_GAP, 0, ColorScheme.DARK_GRAY_COLOR));
 
             final JPanel head = new JPanel(new BorderLayout());
             head.setBackground(CARD);
@@ -218,7 +221,7 @@ public class TickLossPanel extends PluginPanel {
             final JPanel body = new JPanel(new DynamicGridLayout(0, 1, 0, 1));
             body.setBackground(CARD);
             body.setBorder(new EmptyBorder(3, 8, 6, 8));
-            body.add(row("Raider", "Lost", "Eff", MUTED, true));
+            body.add(row("Raider", "Lost", "Efficiency", MUTED, true));
 
             body.add(slot.done == null
                     ? row("You", "--", "", MUTED, false)
@@ -286,7 +289,10 @@ public class TickLossPanel extends PluginPanel {
                         List<TickLossParty.Room> theirs) {
         final JPanel card = new JPanel(new BorderLayout());
         card.setBackground(CARD);
-        card.setBorder(new EmptyBorder(0, 0, 6, 0));
+        // A MatteBorder rather than an EmptyBorder: a component paints its background across its whole
+        // bounds, border included, so empty space at the bottom of a card is still card-coloured and the
+        // cards run into each other. This paints the gap in the sidebar's own colour instead.
+        card.setBorder(new MatteBorder(0, 0, CARD_GAP, 0, ColorScheme.DARK_GRAY_COLOR));
 
         final boolean open = !collapsed.contains(name);
 
@@ -321,7 +327,7 @@ public class TickLossPanel extends PluginPanel {
             body.setBorder(new EmptyBorder(3, 8, 6, 8));
 
             // Column labels, because two bare numbers on a row say nothing about what they are.
-            body.add(row("Room", "Lost", "Eff", MUTED, true));
+            body.add(row("Room", "Lost", "Efficiency", MUTED, true));
 
             final List<RaidRooms.Slot> slots = RaidRooms.layOut(ours);
             for (int i = 0; i < slots.size(); i++) {
@@ -370,7 +376,7 @@ public class TickLossPanel extends PluginPanel {
         final JLabel efficiencyLabel = new JLabel(efficiency, SwingConstants.RIGHT);
         efficiencyLabel.setForeground(colour);
         efficiencyLabel.setFont(heading ? FontManager.getRunescapeSmallFont() : FontManager.getRunescapeFont());
-        efficiencyLabel.setPreferredSize(new Dimension(56, 18));
+        efficiencyLabel.setPreferredSize(new Dimension(66, 18));
         right.add(efficiencyLabel, BorderLayout.EAST);
 
         row.add(right, BorderLayout.EAST);

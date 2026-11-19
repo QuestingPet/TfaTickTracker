@@ -6,7 +6,7 @@ import net.runelite.api.gameval.AnimationID;
 import java.util.Set;
 
 /**
- * PROTOTYPE -- tick loss. Animations that mean "busy, but not attacking".
+ * Animations that mean "busy, but not attacking".
  * <p>
  * The attack test is "an attackable NPC is targeted and I am not idle", which is future proof for new weapons but
  * needs a veto list, because plenty of things replace the idle animation without being an attack. Without it, every

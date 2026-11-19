@@ -21,7 +21,6 @@ import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GraphicsObjectCreated;
 import net.runelite.api.events.InteractingChanged;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -34,10 +33,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * PROTOTYPE -- tick loss. Measures the local player's unused attack ticks, per room and per phase.
+ * Measures the local player's unused attack ticks, per room and per phase.
  * <p>
- * This package is a debug-only prototype and is self-contained on purpose: it reads {@link RaidState},
- * {@link RaidRoom} and the raid events, and nothing from {@code detector}, {@code mistakestate} or {@code panel}.
+ * Everything that decides what a lost tick is lives in this package, reading only {@link RaidState},
+ * {@link RaidRoom} and the raid events. That boundary is what lets the whole measurement run off a recorded
+ * log in the tests without a client.
  * Nothing outside this package should import it either, so it can be lifted into its own plugin with a package
  * rename once the numbers are trustworthy.
  * <p>
@@ -134,7 +134,6 @@ public class TickLossTracker {
 
     public void startUp() {
         reset();
-        applyFoodOverrides();
         weaponSpeeds.startUp();
         eventBus.register(this);
         eventBus.register(fightWindow);
@@ -199,7 +198,6 @@ public class TickLossTracker {
         private final int fromEating;
         private final int fromDudShot;
     }
-
 
     public int getNextAttackTick() {
         return timeline.getNextAttackTick();
@@ -524,35 +522,6 @@ public class TickLossTracker {
             // segment differently is how that happened in the first place.
             closeCurrent();
         }
-    }
-
-    @Subscribe
-    public void onConfigChanged(ConfigChanged e) {
-        if (!TfaTickTrackerPlugin.CONFIG_GROUP.equals(e.getGroup())) return;
-
-        if ("tickLossFastFoods".equals(e.getKey()) || "tickLossSlowFoods".equals(e.getKey())) {
-            applyFoodOverrides();
-        }
-    }
-
-    private void applyFoodOverrides() {
-        eatTracker.setFoodOverrides(parseIds(config.fastFoodIds()), parseIds(config.slowFoodIds()));
-    }
-
-    private static Set<Integer> parseIds(String csv) {
-        if (csv == null || csv.trim().isEmpty()) return Collections.emptySet();
-
-        Set<Integer> ids = new HashSet<>();
-        for (String part : csv.split(",")) {
-            String trimmed = part.trim();
-            if (trimmed.isEmpty()) continue;
-            try {
-                ids.add(Integer.parseInt(trimmed));
-            } catch (NumberFormatException ex) {
-                log.debug("Tick loss: ignoring unparseable item id '{}'", trimmed);
-            }
-        }
-        return ids;
     }
 
     /** Totals across every segment of the current raid. */

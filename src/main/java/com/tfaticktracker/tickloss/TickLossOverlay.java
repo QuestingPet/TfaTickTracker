@@ -16,7 +16,7 @@ import java.awt.Graphics2D;
 import java.util.List;
 
 /**
- * PROTOTYPE -- tick loss. Shows whether we are counting right now, why not when we are not, and the inputs behind
+ * Shows whether we are counting right now, why not when we are not, and the inputs behind
  * the numbers so they can be checked against what actually happened on screen.
  */
 public class TickLossOverlay extends OverlayPanel {

@@ -86,7 +86,7 @@ public final class AttackSpeed {
         }
 
         if (f.weaponId == ItemID.ZORYAS_TOME || f.weaponId == ItemID.ZORYAS_TOME_UNCHARGED) {
-            // PROTOTYPE: 3t always. It is 2t for the three attacks after a landed spec, which needs the spec
+            // Known limitation: 3t always. It is 2t for the three attacks after a landed spec, which needs the spec
             // and the hit tracked together -- not built yet, so a specced Zorya reads as a few ticks of loss.
             return 3;
         }

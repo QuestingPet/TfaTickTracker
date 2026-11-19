@@ -31,7 +31,7 @@ import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
 
 /**
- * PROTOTYPE -- tick loss. The local player's current attack style.
+ * The local player's current attack style.
  * <p>
  * Adapted from RuneLite's AttackStylesPlugin via Customizable XP Drops. RuneLite's own AttackStyle enum and its
  * weapon-type lookup are both package private, so neither can be imported; this follows CXD's approach of reading

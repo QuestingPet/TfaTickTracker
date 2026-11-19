@@ -427,7 +427,7 @@ public final class LogReplay {
                         final int slot = Integer.parseInt(m.group(1));
                         pendingEats.removeIf(eat -> {
                             if (eat[1] != slot || tick - eat[0] > EAT_CONFIRM_TICKS) return false;
-                            eatDelayThisTick += EatTracker.defaultDelayForItem(eat[2]);
+                            eatDelayThisTick += EatTracker.delayForItem(eat[2]);
                             return true;
                         });
                     }

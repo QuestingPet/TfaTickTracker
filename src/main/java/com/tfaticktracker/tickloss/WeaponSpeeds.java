@@ -20,7 +20,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
- * PROTOTYPE -- tick loss. The local player's current attack speed in ticks.
+ * The local player's current attack speed in ticks.
  * <p>
  * Local player only, on purpose: this reads the attack style varp, which cannot be read for anyone else. That is the
  * whole reason other raiders' numbers have to arrive over the party rather than be observed from the scene.

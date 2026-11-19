@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * PROTOTYPE -- tick loss. Which NPCs mean "there is something you are supposed to be hitting right now".
+ * Which NPCs mean "there is something you are supposed to be hitting right now".
  * <p>
  * This table, not the boss health bar, is what opens and closes the fight window. Every boss in the raid presents its
  * real target by transforming into it, which is why the window is driven by NpcChanged:
