@@ -681,15 +681,17 @@ What gives it away is damage. Every attack that connects grants hitpoints experi
 attack, and in a raid nothing else does -- thralls deal damage and grant none. So `UnknownAnimations` keeps
 a tally per animation, and the trigger is:
 
-> counted as an attack **3 times**, across the raid, and **never once** followed by hitpoints experience
+> counted as an attack **5 times**, across the raid, and **never once** followed by hitpoints experience
 > within 1 tick -- reported when the next room closes, once per raid.
 
 Each clause earns its place:
 
-- **3 starts.** One attack missing says nothing and two say very little. Real weapons miss.
+- **5 starts.** Real weapons miss, and a bad streak at a raid boss is ordinary. Three was tried first and
+  is too eager; five misses in a row with nothing to show is worth a sentence.
 - **Never once.** A single hit settles it for good: it is an attack, and its later misses say nothing new.
   This is what keeps an unlisted weapon out of the report while it is being counted correctly.
-- **Across the raid.** One alch per room would never reach three inside one room.
+- **Across the raid, not the room.** The tally never resets between rooms, only between raids, so one alch
+  per room still adds up. The room closing is only when it is *said*.
 - **Within 1 tick.** Experience lands on the tick of the attack, not when the hitsplat reaches the NPC, with
   a tick of slack for jitter. Hitsplats were considered as the signal and rejected: delayed by travel time,
   not guaranteed in every case, and with attacks in flight they can arrive out of order.

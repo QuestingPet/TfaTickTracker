@@ -31,10 +31,10 @@ public class UnknownAnimationsTest {
     }
 
     /**
-     * One miss says nothing, and two say very little.
+     * Four misses say very little. Real weapons miss, and a streak at a raid boss is ordinary.
      * <p>
-     * Real weapons miss. Reporting the first time one did would put a line on the overlay in every raid and
-     * teach everybody to ignore it.
+     * Reporting too eagerly would put a line on the overlay in every raid and teach everybody to ignore it,
+     * which costs more than the occasional gap this stays quiet about.
      */
     @Test
     public void saysNothingUntilItHasHappenedEnoughTimes() {
@@ -115,13 +115,14 @@ public class UnknownAnimationsTest {
     public void addsUpAcrossRoomsRatherThanWithinOne() {
         final UnknownAnimations unknown = new UnknownAnimations();
 
-        unknown.countedAsAttack(ALCH, 100);
-        assertTrue(unknown.settle().isEmpty());
-        unknown.countedAsAttack(ALCH, 500);
-        assertTrue(unknown.settle().isEmpty());
-        unknown.countedAsAttack(ALCH, 900);
+        for (int room = 0; room < UnknownAnimations.STARTS_BEFORE_REPORTING - 1; room++) {
+            unknown.countedAsAttack(ALCH, 100 + room * 400);
+            assertTrue("one a room never reaches the threshold inside a room",
+                    unknown.settle().isEmpty());
+        }
+        unknown.countedAsAttack(ALCH, 9000);
 
-        assertEquals("the third room is where it adds up", 1, unknown.settle().size());
+        assertEquals("the room that tips it over is where it is said", 1, unknown.settle().size());
     }
 
     /**

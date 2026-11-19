@@ -44,11 +44,12 @@ final class UnknownAnimations {
      * How many times an animation has to be counted as an attack, having never produced damage, before it
      * is worth mentioning.
      * <p>
-     * Three, because one attack missing says nothing and two says very little. A real weapon that has swung
-     * three times and connected on none of them is possible and does happen, which is exactly why this ends
-     * in a line of text rather than in a different number.
+     * Five, counted across the whole raid rather than within a room. A real weapon that has swung five
+     * times and connected on none of them is still possible -- which is exactly why this ends in a line of
+     * text rather than in a different number -- but it is unlikely enough that five misses in a row is
+     * worth a sentence. Three was tried first and is too eager: a bad streak at a raid boss is ordinary.
      */
-    static final int STARTS_BEFORE_REPORTING = 3;
+    static final int STARTS_BEFORE_REPORTING = 5;
 
     /**
      * At most this many watched at once, and at most this many ever mentioned, per raid.
