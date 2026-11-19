@@ -1,8 +1,6 @@
 package com.tfaticktracker;
 
 import com.google.inject.Provides;
-import com.tfaticktracker.debug.EventLogger;
-import com.tfaticktracker.tickloss.TickLossOverlay;
 import com.tfaticktracker.tickloss.TickLossPanel;
 import com.tfaticktracker.tickloss.TickLossSummaryOverlay;
 import com.tfaticktracker.tickloss.TickLossTracker;
@@ -67,14 +65,6 @@ public class TfaTickTrackerPlugin extends Plugin {
     @Inject
     private TickLossSummaryOverlay tickLossSummaryOverlay;
 
-    /** Developer view of the state machine behind each decision. Hidden unless its config says otherwise. */
-    @Inject
-    private TickLossOverlay tickLossOverlay;
-
-    /** Writes the raids the test fixtures are cut from. Off unless its config says otherwise. */
-    @Inject
-    private EventLogger eventLogger;
-
     private final BufferedImage icon = ImageUtil.loadImageResource(TfaTickTrackerPlugin.class, "panel-icon.png");
     private TickLossPanel panel;
     private NavigationButton navButton;
@@ -94,9 +84,7 @@ public class TfaTickTrackerPlugin extends Plugin {
         updateSidePanel();
 
         overlayManager.add(tickLossSummaryOverlay);
-        overlayManager.add(tickLossOverlay);
 
-        eventLogger.startUp();
         tickLossTracker.startUp();
 
         clientThread.invoke(() -> raidState.startUp());
@@ -107,9 +95,7 @@ public class TfaTickTrackerPlugin extends Plugin {
         raidState.shutDown();
 
         overlayManager.remove(tickLossSummaryOverlay);
-        overlayManager.remove(tickLossOverlay);
 
-        eventLogger.shutDown();
         tickLossTracker.shutDown();
 
         clientToolbar.removeNavigation(navButton);

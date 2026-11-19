@@ -18,7 +18,7 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 /**
  * Tick loss as a PLAYER sees it: what the last attack cost, and how each room went.
  * <p>
- * Deliberately not {@link TickLossOverlay}, which exists to be checked against a log and shows animation ids,
+ * Deliberately not the debug overlay, which exists to be checked against a log and shows animation ids,
  * varbit states and a live cooldown counter. None of that is useful to someone raiding, and the live counter is
  * actively bad: it ticks into the negatives while you are still deciding what to do, so it reads as nagging.
  * <p>

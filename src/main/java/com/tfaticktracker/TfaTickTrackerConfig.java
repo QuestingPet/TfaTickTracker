@@ -4,8 +4,6 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
-import net.runelite.client.config.Keybind;
-import net.runelite.api.annotations.VisibleForDevtools;
 
 @ConfigGroup(TfaTickTrackerPlugin.CONFIG_GROUP)
 public interface TfaTickTrackerConfig extends Config {
@@ -116,67 +114,5 @@ public interface TfaTickTrackerConfig extends Config {
         // everyone else is a thing to turn on, not a thing to turn off, and it is the one section whose
         // height depends on how many people happen to be in the party.
         return false;
-    }
-
-    /**
-     * Developer tooling. None of it is useful to a player, and all of it is how every number in this plugin
-     * was arrived at: the logger writes the raids that the test fixtures are cut from, and the debug overlay
-     * shows the state machine behind a decision rather than its result.
-     */
-    @ConfigSection(
-            name = "Debug",
-            description = "Developer tools. Only work in developer mode.",
-            position = 5,
-            closedByDefault = true
-    )
-    String debugSettings = "debugSettings";
-
-    @VisibleForDevtools
-    @ConfigItem(
-            keyName = "debugOverlay",
-            name = "Debug Overlay",
-            description = "Developer view: the state machine, raw counters and the inputs behind them.",
-            section = debugSettings,
-            position = 1
-    )
-    default boolean debugOverlay() {
-        return false;
-    }
-
-    @VisibleForDevtools
-    @ConfigItem(
-            keyName = "eventLogger",
-            name = "Event Logger",
-            description = "Log game events and their ids to debug-logs/ in the working directory. Only works "
-                    + "in developer mode.",
-            section = debugSettings,
-            position = 2
-    )
-    default boolean eventLogger() {
-        return false;
-    }
-
-    @VisibleForDevtools
-    @ConfigItem(
-            keyName = "eventLoggerScripts",
-            name = "Event Logger Scripts",
-            description = "Also log every script that runs. Very noisy.",
-            section = debugSettings,
-            position = 3
-    )
-    default boolean eventLoggerScripts() {
-        return false;
-    }
-
-    @VisibleForDevtools
-    @ConfigItem(
-            keyName = "eventLoggerMarkerKey",
-            name = "Event Logger Marker Key",
-            description = "Press to write a numbered marker line into the event log.",
-            section = debugSettings,
-            position = 4
-    )
-    default Keybind eventLoggerMarkerKey() {
-        return Keybind.NOT_SET;
     }
 }
