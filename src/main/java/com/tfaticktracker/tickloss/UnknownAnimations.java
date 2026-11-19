@@ -30,9 +30,11 @@ final class UnknownAnimations {
     /**
      * How long after an attack its experience can still arrive.
      * <p>
-     * Hitpoints experience lands on the tick of the attack itself, not when the hitsplat reaches the NPC --
-     * confirmed by the player, who is the only one able to confirm in-game behaviour here. One tick of slack
-     * is kept because attacktimer allows the same, which suggests it can occasionally arrive late.
+     * Hitpoints experience lands on the tick of the attack itself, not when the hitsplat reaches the NPC.
+     * Stated by the player and then measured, once the logger started recording xp: in
+     * debug-logs/tfa-events-20261119-010557.log all 11 hitpoints gains fall on the exact tick a glaive
+     * throw started, offset zero, none later. One tick of slack is kept anyway because attacktimer allows
+     * the same, which suggests it can occasionally arrive late.
      * <p>
      * <b>Hitsplats were considered as the signal instead and rejected.</b> They are delayed by the time a
      * projectile takes, they are not guaranteed to appear in every case, and with attacks in flight they can

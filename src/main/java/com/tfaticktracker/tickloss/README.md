@@ -692,9 +692,11 @@ Each clause earns its place:
   This is what keeps an unlisted weapon out of the report while it is being counted correctly.
 - **Across the raid, not the room.** The tally never resets between rooms, only between raids, so one alch
   per room still adds up. The room closing is only when it is *said*.
-- **Within 1 tick.** Experience lands on the tick of the attack, not when the hitsplat reaches the NPC, with
-  a tick of slack for jitter. Hitsplats were considered as the signal and rejected: delayed by travel time,
-  not guaranteed in every case, and with attacks in flight they can arrive out of order.
+- **Within 1 tick.** Experience lands on the tick of the attack, not when the hitsplat reaches the NPC. Now
+  measured rather than assumed: in `tfa-events-20261119-010557.log`, the first log recorded after the logger
+  learned to write xp, all 11 hitpoints gains land on the exact tick a glaive throw started, offset zero.
+  The slack is for jitter. Hitsplats were considered as the signal and rejected: delayed by travel time, not
+  guaranteed in every case, and with attacks in flight they can arrive out of order.
 - **When the room closes.** Mid-fight it would be noise, and the numbers it bears on are the room's.
 - **Once per raid.** Repeating it every room would make the overlay noisier the longer the problem went
   unfixed, which is precisely backwards.

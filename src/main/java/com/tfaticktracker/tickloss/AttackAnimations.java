@@ -241,6 +241,12 @@ final class AttackAnimations {
             AnimationID.ZAROS_CASTING_WALKMERGE,
             AnimationID.ZAROS_VERTICAL_CASTING,
             AnimationID.ZAROS_VERTICAL_CASTING_WALKMERGE,
+            // The uncharged Ralos glaive, which neither list had and attacktimer does not either -- the
+            // audit never saw it because nobody had run one uncharged until 19 November. It was counted
+            // correctly the whole time, because the denylist counts an unlisted animation as an attack and
+            // this is one; listing it only moves it from a watched guess to a confident attack.
+            AnimationID.HUMAN_GLAIVE_RALOS01_UNCHARGED_THROW,
+            AnimationID.HUMAN_GLAIVE_RALOS01_UNCHARGED_SPECIAL,
             // Found by the audit, in neither list. The Crimson Kisten appears in 9 of the 44 raids, and
             // attacktimer's data has its block but neither of its attacks -- which costs attacktimer
             // nothing, because that data is its speed lookup rather than its detector, and it falls back to
