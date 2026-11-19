@@ -700,10 +700,29 @@ Each clause earns its place:
 It reports and never decides. An animation that trips this is still counted as an attack; all that happens
 is a line naming the id, in the overlay and in the side panel.
 
+**What it is actually hunting** is a new block or defend animation, or a new utility spell -- something that
+animates you mid-fight and is not an attack. That is the `HUMAN_SHIELD_DEFENCE` bug class, which cost 217
+phantom early attacks before anyone noticed, and this is what would catch the next one without anybody
+thinking to look. A new weapon's ATTACK animation is unlisted too, but it deals damage, so it is excused on
+its first hit and never reported -- which is correct, because the default counted it properly.
+
+**Its blind spot** is the flip side of that: one coincidence excuses an animation for the rest of the raid.
+Experience lands on the attack tick, so experience during an unlisted animation means an attack really was
+made then -- the animation either is one or masked one, and counting it was right either way. But something
+that masks a real attack once and then animates you harmlessly fifty times is never mentioned again. The
+alternative, needing a recent hit or a ratio, reports every unlisted weapon that misses three in a row,
+which at a raid boss is all of them. A rule that occasionally stays quiet beats one that cries wolf.
+
 ### What the audit found
 
 Every animation the local player showed while targeting an NPC inside a raid, across 44 logs from 11-18
-November: **22 distinct animations**, which is what makes an allowlist tractable at all.
+November: **22 distinct animations**.
+
+Those 44 are not a choice of window. `EventLogger` only started writing `target`, `targetatk` and `inraid`
+onto TICK lines partway through development, and the 38 older logs carry none of them -- running the audit
+over all 82 produces byte-identical output, because the older ones match nothing. So this says what a week
+of raiding looks like, not what every raid ever recorded looks like. `HUMAN_SPELLCAST_DEMONBANE` is the
+proof: it appears in logs from 1-5 November and in none from the audited window.
 
 | | ticks | starts | logs | verdict |
 |---|---|---|---|---|

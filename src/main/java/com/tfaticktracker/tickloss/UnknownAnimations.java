@@ -81,8 +81,16 @@ final class UnknownAnimations {
     /**
      * We dealt damage. Anything counted as an attack on this tick has just proved itself.
      * <p>
-     * Proving one occurrence is enough for good: an animation that has ever dealt damage is an attack, and
-     * the misses after it say nothing new.
+     * Proving one occurrence is enough for good, and that is deliberate rather than lazy. Experience lands
+     * on the tick of the attack, so experience on this animation's tick means an attack really was made
+     * then -- either this animation is one, or it masked one. In both cases counting it as an attack was
+     * the right call, which is the only question being asked.
+     * <p>
+     * <b>The blind spot.</b> One such coincidence excuses the animation for the rest of the raid, so
+     * something that masks a real attack once and then animates you harmlessly fifty times is never
+     * mentioned. The alternative -- needing a recent hit, or a ratio -- reports every unlisted weapon that
+     * misses a few times in a row, which at a raid boss is all of them. Between a rule that occasionally
+     * stays quiet and one that cries wolf every raid, quiet is the one people keep reading.
      */
     void damageDealt(int tick) {
         for (Candidate candidate : tracked.values()) {

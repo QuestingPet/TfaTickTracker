@@ -221,6 +221,13 @@ final class AttackAnimations {
             AnimationID.HUMAN_EYE_OF_AYAK_NORMAL,
             AnimationID.HUMAN_EYE_OF_AYAK_SPECIAL,
             AnimationID.HUMAN_SPECIAL_ACCURSED,
+            // One id, two spells. This is the Demonbane casts, which ARE attacks and can be cast in the
+            // raid, and it is also Greater Corruption, which is a buff in the same family as a thrall. The
+            // animation cannot tell them apart. It is listed as an attack because the attack is the case
+            // that can be got wrong: the denylist counts an unlisted animation as an attack anyway, so the
+            // only thing this entry decides is whether it is a confident attack or a watched guess, and a
+            // Demonbane cast is not a guess. The corruption is rare enough to live with.
+            AnimationID.HUMAN_SPELLCAST_DEMONBANE,
             AnimationID.HUMAN_SPELLCAST_GRASP,
             AnimationID.NIGHTMARE_STAFF_SPECIAL,
             AnimationID.POG_WARPED_SCEPTRE_ATTACK,

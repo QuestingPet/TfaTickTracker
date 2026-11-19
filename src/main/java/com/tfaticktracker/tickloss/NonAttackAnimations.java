@@ -148,16 +148,6 @@ final class NonAttackAnimations {
             AnimationID.TFA_HUMAN_ZORYA_TOME_DEFEND,
             AnimationID.TFA_HUMAN_ZORYA_TOME_DEFEND_FEMALE,
 
-            // Greater Corruption, which is a buff rather than an attack -- the same family as a thrall or
-            // Mark of Darkness, confirmed by the player, who is the only one able to confirm in-game
-            // behaviour here. The awkward part is that the id is shared: HUMAN_SPELLCAST_DEMONBANE is also
-            // the Demonbane spells, which ARE attacks. One animation, two meanings, and no way to tell them
-            // apart from the animation alone. It sits here because this plugin only ever measures inside
-            // The Fractured Archives, where the cast being made is the corruption; in a demon-slaying
-            // context this entry would be wrong. attacktimer has the same collision and says so in its own
-            // comment on the entry.
-            AnimationID.HUMAN_SPELLCAST_DEMONBANE,
-
             // Blocks and defends attacktimer knew about and we did not
             AnimationID.BARROW_GUTHAN_DEFEND,
             AnimationID.BRAIN_PLAYER_ANCHOR_DEFEND,
