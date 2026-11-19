@@ -29,7 +29,7 @@ public class UnknownAnimationsTest {
         final SegmentStats room = segment();
 
         unknown.seen(14253, 100, room);
-        final List<UnknownAnimations.Entry> reported = unknown.takeBackedByDamage(102);
+        final List<UnknownAnimations.Entry> reported = unknown.takeBackedByDamage(100);
 
         assertEquals(1, reported.size());
         assertEquals(14253, reported.get(0).animation);
@@ -88,7 +88,8 @@ public class UnknownAnimationsTest {
         unknown.seen(14253, 101, room);
         unknown.seen(14253, 102, room);
 
-        assertEquals(1, unknown.takeBackedByDamage(103).size());
+        assertEquals("one candidate, and still live on its last tick",
+                1, unknown.takeBackedByDamage(102).size());
     }
 
     /** The same animation in a later room is worth reporting again, against that room. */
@@ -101,7 +102,7 @@ public class UnknownAnimationsTest {
         unknown.seen(14253, 100, first);
         unknown.seen(14253, 101, second);
 
-        assertEquals(2, unknown.takeBackedByDamage(102).size());
+        assertEquals(2, unknown.takeBackedByDamage(101).size());
     }
 
     /**

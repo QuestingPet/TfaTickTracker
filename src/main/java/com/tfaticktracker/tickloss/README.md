@@ -678,10 +678,11 @@ which is what hitpoints experience means: every combat attack that connects gran
 else does (thralls deal damage and grant none). So `UnknownAnimations` holds a candidate for
 `WINDOW_TICKS` and reports it only if hitpoints experience turns up in that window.
 
-Five, measured from the gap between an attack animation starting and our own next hitsplat across the 44
-raids: scythe +1 in 85% of 4384 swings, blowpipe +0 in 86%, ZCB +2 in 60% and +3 in 25%, bow spread over +0
-to +4. Whether the experience arrives with the attack or with the hitsplat is not something measured here --
-the logger records no xp drops -- and five is wide enough either way.
+One tick. Experience lands on the tick of the attack, not when the hitsplat reaches the NPC, with a tick of
+slack for jitter. Hitsplats were considered as the signal instead and rejected: they are delayed by travel
+time, they are not guaranteed in every case, and with attacks in flight they can arrive out of order. For
+scale, our own hitsplat lands anywhere from +0 to +4 after a bow shot across the 44 raids -- that spread is
+what the experience signal avoids.
 
 **It cannot be the detector**, which is exactly why only the report uses it. A miss or a zero grants no
 experience, and a cooldown must still be re-seeded on a miss; a detector built on experience would ignore

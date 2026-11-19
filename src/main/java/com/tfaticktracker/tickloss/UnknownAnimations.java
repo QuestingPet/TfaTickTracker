@@ -26,18 +26,22 @@ import java.util.List;
 final class UnknownAnimations {
 
     /**
-     * How long after an animation damage of ours can still turn up.
+     * How long after an animation its experience can still arrive.
      * <p>
-     * Sized from the measured gap between an attack animation starting and our own next hitsplat landing,
-     * over the 44 recorded raids: scythe +1 in 85% of 4384 swings, blowpipe +0 in 86%, ZCB +2 in 60% and
-     * +3 in 25%, bow spread over +0 to +4. Five covers all of it.
+     * Hitpoints experience lands on the tick of the attack itself, not when the hitsplat reaches the NPC --
+     * confirmed by the player, who is the only one able to confirm in-game behaviour here. One tick of slack
+     * is kept because attacktimer allows the same, which suggests it can occasionally arrive late.
      * <p>
-     * Whether the experience itself arrives with the attack or with the hitsplat is NOT something this
-     * project has measured -- the event logger records no xp drops, so there is nothing to check it
-     * against. Five is wide enough either way, and the cost of being wide is at most an over-eager
-     * candidate in a report, never a measured number.
+     * The project's own measurement of animation-to-hitsplat is therefore NOT what sizes this, and is worth
+     * writing down only to say why: over the 44 recorded raids our own hitsplat lands at +1 for 85% of 4384
+     * scythe swings, +0 for 86% of blowpipe shots, and anywhere from +0 to +4 for a bow. Experience that
+     * waited for the hit would need a window of five. It does not.
+     * <p>
+     * <b>Hitsplats were considered as the signal instead and rejected.</b> They are delayed by exactly that
+     * travel time, they are not guaranteed to appear in every case, and with attacks in flight they can
+     * arrive out of order. Experience is immediate and unambiguous, which is the whole reason to use it.
      */
-    static final int WINDOW_TICKS = 5;
+    static final int WINDOW_TICKS = 1;
 
     /** At most this many held at once, so a bad tick cannot grow the list without bound. */
     private static final int MAX_PENDING = 16;
@@ -63,14 +67,24 @@ final class UnknownAnimations {
     /**
      * An animation we did not recognise, during a fight. Held, not reported.
      * <p>
-     * Deduplicated per segment: a two tick animation shows on both of its ticks, and a weapon swung all
-     * fight would otherwise fill the list on its own and crowd out everything after it.
+     * One candidate per animation per segment, re-stamped each tick it is still showing. An animation
+     * lasting several ticks would otherwise fill the list on its own and crowd out everything after it,
+     * and with a one tick window its first sighting would go stale before the tick it mattered on.
      */
     void seen(int animation, int tick, SegmentStats segment) {
-        if (segment == null || pending.size() >= MAX_PENDING) return;
-        for (Entry entry : pending) {
-            if (entry.animation == animation && entry.segment == segment) return;
+        if (segment == null) return;
+
+        final Iterator<Entry> entries = pending.iterator();
+        while (entries.hasNext()) {
+            final Entry entry = entries.next();
+            if (entry.animation == animation && entry.segment == segment) {
+                // Still showing. Re-stamp rather than keep the first sighting, or an animation lasting
+                // several ticks would fall outside the window before the tick it earned anything on.
+                entries.remove();
+                break;
+            }
         }
+        if (pending.size() >= MAX_PENDING) return;
         pending.add(new Entry(animation, tick, segment));
     }
 

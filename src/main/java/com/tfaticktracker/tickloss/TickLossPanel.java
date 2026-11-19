@@ -52,6 +52,8 @@ public class TickLossPanel extends PluginPanel {
     private static final Color TEXT = new Color(0xD0, 0xD0, 0xD0);
     /** Column headings, and rooms nobody has reached yet. */
     private static final Color MUTED = new Color(0x9E, 0x9E, 0x9E);
+    /** A note that something is missing or wrong. The only colour left in the panel, so it still reads as one. */
+    private static final Color WARNING = new Color(0xE0, 0x5C, 0x5C);
     /** Cards sit a shade ABOVE the sidebar rather than below it, which is what makes the text legible. */
     private static final Color CARD = new Color(0x32, 0x32, 0x32);
     /** Sidebar-coloured space under each card, so one raider's block is visibly not the next one's. */
@@ -182,7 +184,7 @@ public class TickLossPanel extends PluginPanel {
         final int raiders = tracker.getParty().getRaidSize();
         if (raiders <= 1 || showing >= raiders - 1) return;
 
-        cards.add(message("Only raiders running this plugin and in your RuneLite party appear here. "
+        cards.add(warning("Only raiders running this plugin and in your RuneLite party appear here. "
                 + showing + " of " + (raiders - 1) + " others are sharing."));
     }
 
@@ -423,6 +425,24 @@ public class TickLossPanel extends PluginPanel {
 
         row.add(right, BorderLayout.EAST);
         return row;
+    }
+
+    /**
+     * A note that something is missing, in the one colour this panel still uses.
+     * <p>
+     * Bigger and red rather than the muted small type the other notes use, because this one answers a
+     * question the player is already asking -- "where is everybody" -- and at the size of a footnote it was
+     * being read as decoration.
+     */
+    private JPanel warning(String text) {
+        final JPanel panel = message(text);
+        for (java.awt.Component child : panel.getComponents()) {
+            if (child instanceof JLabel) {
+                child.setForeground(WARNING);
+                child.setFont(FontManager.getRunescapeFont());
+            }
+        }
+        return panel;
     }
 
     private JPanel message(String text) {
