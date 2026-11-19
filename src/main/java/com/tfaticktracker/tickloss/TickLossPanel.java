@@ -205,8 +205,8 @@ public class TickLossPanel extends PluginPanel {
             if (list.length() > 0) list.append(", ");
             list.append(id);
         }
-        cards.add(message("Unrecognised animations: " + list + ". These were counted as attacks but never "
-                + "dealt damage, so those rooms may read as less loss than you had. Worth reporting."));
+        cards.add(note("Unrecognised animations: " + list + ". These were counted as attacks but never "
+                + "dealt damage, so those rooms may read as less loss than you had. Worth reporting.", MUTED));
     }
 
     /** The by-raider / by-room switch, as two halves of one control. */
@@ -434,10 +434,22 @@ public class TickLossPanel extends PluginPanel {
      * being read as decoration.
      */
     private JPanel warning(String text) {
+        return note(text, WARNING);
+    }
+
+    /**
+     * A note about something being wrong, at the size of the panel's own text.
+     * <p>
+     * The small font is for the empty state, which nobody needs to read twice. Both of these answer a
+     * question somebody is already asking -- "where is everybody", "why is this number odd" -- and at the
+     * size of a footnote they were being read as decoration. Colour is the only thing that separates them:
+     * one says the panel is incomplete, the other that a number above it may be.
+     */
+    private JPanel note(String text, Color colour) {
         final JPanel panel = message(text);
         for (java.awt.Component child : panel.getComponents()) {
             if (child instanceof JLabel) {
-                child.setForeground(WARNING);
+                child.setForeground(colour);
                 child.setFont(FontManager.getRunescapeFont());
             }
         }
