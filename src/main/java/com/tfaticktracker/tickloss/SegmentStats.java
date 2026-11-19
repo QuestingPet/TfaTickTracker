@@ -128,7 +128,12 @@ public class SegmentStats {
         return lostTicks;
     }
 
-    /** Fraction of the fight window not lost, excluding eating. */
+    /**
+     * Fraction of the fight window not lost.
+     * <p>
+     * Eating is INCLUDED, for the reason {@link #getLost()} gives: a tick spent on food is a tick you did
+     * not attack in. {@link #getLostToEating()} is the breakdown of how much of it was food, not a discount.
+     */
     public double getEfficiency() {
         if (ticksCounting <= 0) return 1.0d;
         return Math.max(0.0d, 1.0d - ((double) lostTicks / ticksCounting));

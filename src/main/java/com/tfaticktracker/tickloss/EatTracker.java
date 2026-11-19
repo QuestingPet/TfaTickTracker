@@ -58,24 +58,67 @@ public class EatTracker {
     private final Deque<PendingEat> pending = new ArrayDeque<>();
 
     /**
-     * Combo food: a 2 tick delay rather than the usual 3, so it can be eaten alongside normal food.
+     * Every food in the game that delays an attack by 2 ticks instead of the usual 3.
      * <p>
-     * A fixed table rather than something a player types item ids into. Being missing from it costs one tick
-     * of over-reported loss on that eat and nothing else, which is not worth a settings field, and an id
-     * nobody can look up is not a setting anyone would ever fill in correctly.
+     * Taken from the wiki's fast foods table, the attack delay column, which is the one that matters here:
+     * https://oldschool.runescape.wiki/w/Food/Fast_foods. Everything absent from this list is 3, and
+     * nothing is 4 -- there is no slow food, which is why there is no third tier and no config field to
+     * put one in.
+     * <p>
+     * The pizzas used to be in here and are not 2: they are an ordinary 3.
+     * <p>
+     * What a wrong entry costs is narrower than it looks. The headline lost figure is measured against the
+     * WEAPON's cooldown and never moves, because {@code AttackTimeline.nextAttackTick} is deliberately not
+     * pushed by food; so is efficiency, which is built from the same figure. What a delay decides is how
+     * much of that gap is attributed to the mouthful in "lost to eating", which is the breakdown line, not
+     * the verdict. A pizza at 2 moved one tick per slice out of the food's column and into your own.
+     * <p>
+     * Most of this is gnome food nobody brings to a raid. Being complete costs nothing and there is no
+     * longer a config field to patch a gap with, so the list is the whole table rather than the likely
+     * part of it.
      */
     private static final Set<Integer> FAST_FOOD = ImmutableSet.of(
+            // Karambwan, in its ordinary, leagues and blighted forms
             ItemID.TBWT_COOKED_KARAMBWAN,
             ItemID.BR_TBWT_COOKED_KARAMBWAN,
             ItemID.BLIGHTED_KARAMBWAN,
-            ItemID.PLAIN_PIZZA,
-            ItemID.HALF_PLAIN_PIZZA,
-            ItemID.MEAT_PIZZA,
-            ItemID.HALF_MEAT_PIZZA,
-            ItemID.ANCHOVIE_PIZZA,
-            ItemID.HALF_ANCHOVIE_PIZZA,
-            ItemID.PINEAPPLE_PIZZA,
-            ItemID.HALF_PINEAPPLE_PIZZA);
+            // The other two that turn up outside gnome cooking
+            ItemID.HALIBUT,
+            ItemID.VAMPYRIUM_MYSTERY_KEBAB,
+            // Gauntlet combo food. Not the plain paddlefish, which is a normal 3.
+            ItemID.GAUNTLET_COMBO_FOOD,
+            ItemID.GAUNTLET_COMBO_FOOD_HM,
+            // Toad's legs, and the gnome dishes made from them
+            ItemID.TOADS_LEGS,
+            ItemID.TANGLED_TOADS_LEGS,
+            ItemID.PREMADE_TANGLED_TOADS_LEGS,
+            // Crunchies
+            ItemID.TOAD_CRUNCHIES,
+            ItemID.SPICY_CRUNCHIES,
+            ItemID.WORM_CRUNCHIES,
+            ItemID.CHOCCHIP_CRUNCHIES,
+            ItemID.PREMADE_TOAD_CRUNCHIES,
+            ItemID.PREMADE_SPICY_CRUNCHIES,
+            ItemID.PREMADE_WORM_CRUNCHIES,
+            ItemID.PREMADE_CHOCCHIP_CRUNCHIES,
+            // Battas
+            ItemID.FRUIT_BATTA,
+            ItemID.TOAD_BATTA,
+            ItemID.WORM_BATTA,
+            ItemID.VEGETABLE_BATTA,
+            ItemID.CHEESE_TOM_BATTA,
+            ItemID.PREMADE_FRUIT_BATTA,
+            ItemID.PREMADE_TOAD_BATTA,
+            ItemID.PREMADE_WORM_BATTA,
+            ItemID.PREMADE_VEGETABLE_BATTA,
+            ItemID.PREMADE_CHEESE_TOM_BATTA,
+            // Gnomebowls
+            ItemID.WORM_HOLE,
+            ItemID.VEG_BALL,
+            ItemID.CHOCOLATE_BOMB,
+            ItemID.PREMADE_WORM_HOLE,
+            ItemID.PREMADE_VEG_BALL,
+            ItemID.PREMADE_CHOCOLATE_BOMB);
 
     /** Delay ticks from eats that have been confirmed but not yet charged against an attack gap. */
     @Getter

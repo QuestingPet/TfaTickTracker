@@ -51,16 +51,34 @@ public class EatTrackerTest {
     /**
      * What a mouthful costs, now that there is no config field to correct it with.
      * <p>
-     * Three ticks for food, two for combo food, and the table is fixed in code. Measured in
-     * {@code tfa-events-20261112-141632.log}: elder maul attacks at ticks 333 and 344 around a combo eat at
-     * 336, an eleven tick gap, which is the weapon's six plus a karambwan's two plus an anglerfish's three.
+     * Two ticks for the foods on the wiki's fast foods list, three for everything else, and nothing is
+     * four. Measured independently in {@code tfa-events-20261112-141632.log}: elder maul attacks at ticks
+     * 333 and 344 around a combo eat at 336, an eleven tick gap, which is the weapon's six plus a
+     * karambwan's two plus an anglerfish's three.
      */
     @Test
-    public void comboFoodCostsTwoTicksAndEverythingElseCostsThree() {
+    public void fastFoodCostsTwoTicksAndEverythingElseCostsThree() {
         assertEquals(2, EatTracker.delayForItem(ItemID.TBWT_COOKED_KARAMBWAN));
-        assertEquals(2, EatTracker.delayForItem(ItemID.PLAIN_PIZZA));
+        assertEquals(2, EatTracker.delayForItem(ItemID.HALIBUT));
+        assertEquals(2, EatTracker.delayForItem(ItemID.GAUNTLET_COMBO_FOOD));
+        assertEquals(2, EatTracker.delayForItem(ItemID.PREMADE_CHOCOLATE_BOMB));
         assertEquals(3, EatTracker.delayForItem(ItemID.SHARK));
         assertEquals("an item nobody has listed is ordinary food, not free",
                 3, EatTracker.delayForItem(-1));
+    }
+
+    /**
+     * Pizza is ordinary food, and was listed as fast for weeks.
+     * <p>
+     * It reads like combo food because it is eaten in two halves, but the wiki's attack delay column says
+     * three. Calling it two moved a tick per slice out of "lost to eating" and into plain loss, so the
+     * breakdown blamed the player for a tick the food had taken. Pinned rather than left to a future tidy
+     * of the list.
+     */
+    @Test
+    public void pizzaIsNotFastFood() {
+        assertEquals(3, EatTracker.delayForItem(ItemID.PLAIN_PIZZA));
+        assertEquals(3, EatTracker.delayForItem(ItemID.HALF_PLAIN_PIZZA));
+        assertEquals(3, EatTracker.delayForItem(ItemID.PINEAPPLE_PIZZA));
     }
 }

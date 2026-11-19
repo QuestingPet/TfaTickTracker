@@ -384,8 +384,10 @@ three ticks of food delay -- and the hitsplats confirm nothing was fired at 847.
 now left standing and the next attack attributes its overshoot to eating, so it stays out of the
 headline figure rather than being charged to you.
 
-Consequence: the food's own 2/3/4 tick delay never enters the number, so `delayForItem` and the
-food id config now only affect what the overlay displays.
+Consequence: the food's own 2 or 3 tick delay never enters the headline number or the efficiency, both
+of which are measured against the weapon's cooldown. All `delayForItem` decides is how much of a gap is
+attributed to the mouthful in "lost to eating", which is a breakdown line. That is also why the fast
+food list can be a fixed table in code with no config field behind it.
 
 Freezing a Xarth corpse costs no tick and does not touch the attack cooldown, so
 `HUMAN_SPELLCAST_GRASP` is vetoed. Measured across every log in `debug-logs/`: 309 grasp-then-weapon
