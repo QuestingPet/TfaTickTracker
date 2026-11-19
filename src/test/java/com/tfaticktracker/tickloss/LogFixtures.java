@@ -157,6 +157,9 @@ final class LogFixtures {
             case "INVENTORY":
             case "MOVE":
             case "MARK":
+            // Hitpoints experience, which is how UnknownAnimations tells an attack that missed from
+            // something that was never an attack. Only logs recorded from 19 November onwards have it.
+            case "XP":
                 return true;
             case "VAR":
                 return watched(line);

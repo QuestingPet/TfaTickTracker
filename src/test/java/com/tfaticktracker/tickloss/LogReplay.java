@@ -32,11 +32,13 @@ import java.util.regex.Pattern;
  *     <li><b>Weapon speed.</b> The log records no equipment, so speed is inferred from the attack animation
  *     via {@link #SPEED_BY_ANIMATION}. Good enough for the weapons actually used; the real speed logic lives
  *     in {@link WeaponSpeeds} and is not exercised here.</li>
- *     <li><b>Unrecognised animations.</b> The replay never reports one. Deciding whether an animation
- *     counted as an attack was really one needs hitpoints experience, and the nine committed fixtures were
- *     cut before {@code EventLogger} recorded xp drops, so no candidate ever matures in them. That costs
- *     the fixtures nothing, because the rule reports and never decides -- which is also why the whole
- *     allowlist experiment left every committed number untouched in both directions.</li>
+ *     <li><b>Unrecognised animations.</b> The replay never reports one, and nothing here consumes the
+ *     {@code XP} lines yet. Deciding whether an animation counted as an attack was really one needs
+ *     hitpoints experience; {@code EventLogger} began recording it on 19 November and {@link LogFixtures}
+ *     keeps those lines, so a fixture cut from a newer raid can carry what such a test would need. The nine
+ *     committed ones are older and have none. It costs the fixtures nothing either way, because that rule
+ *     reports and never decides -- which is also why the whole allowlist experiment left every committed
+ *     number untouched in both directions.</li>
  *     <li><b>Eating.</b> {@code EventLogger} records no menu clicks or inventory changes, so a confirmed eat
  *     cannot be reconstructed. Eat attribution is covered by scenarios in {@code AttackTimelineTest} instead.</li>
  * </ul>
