@@ -49,9 +49,14 @@ import java.util.Set;
  * <p>
  * <b>Why these ids.</b> Audited across 44 recorded raids from 11-18 November, every animation the local
  * player showed while targeting an NPC in the raid: 22 distinct ones, and not one of them is called a
- * non-attack by us and an attack by attacktimer. Three were in neither list, which is exactly the hole
- * this file closes -- two Kisten attacks, below, and HUMAN_TFA_SMALL_CHEST_OPEN, which opened a chest
- * mid-fight and was being counted as an attack.
+ * non-attack by us and an attack by attacktimer. Three were in neither list: the two Kisten attacks below,
+ * and HUMAN_TFA_SMALL_CHEST_OPEN, which is the loot room and never reaches a fight segment at all.
+ * <p>
+ * The 174 ids taken from attacktimer are its ATTACK entries, minus its one sailing animation. Worth knowing what that data is to it: not a
+ * detector. attacktimer decides an attack happened from the player interacting with a target, vetoed by a
+ * blocklist, and uses these entries for the combat skill and speed, falling back to the weapon's own stats
+ * when it has never seen the animation. So its list being incomplete does not break it, and ours being
+ * incomplete would -- which is why the unrecognised case is reported rather than swallowed.
  */
 final class AttackAnimations {
 
@@ -233,11 +238,11 @@ final class AttackAnimations {
             AnimationID.ZAROS_CASTING_WALKMERGE,
             AnimationID.ZAROS_VERTICAL_CASTING,
             AnimationID.ZAROS_VERTICAL_CASTING_WALKMERGE,
-            // Sailing. Cannot happen in a raid; kept so the list is a faithful copy rather than a curated one
-            AnimationID.HUMAN_SAILING_CANNON01_SMALL01_ATTACK01,
-            // Found by the audit, in neither list. The Crimson Kisten appears in 9 of the 44 raids and
-            // attacktimer has its block but not its attacks, so an allowlist copied straight from there
-            // would have reported a Kisten user as losing every tick they attacked in.
+            // Found by the audit, in neither list. The Crimson Kisten appears in 9 of the 44 raids, and
+            // attacktimer's data has its block but neither of its attacks -- which costs attacktimer
+            // nothing, because that data is its speed lookup rather than its detector, and it falls back to
+            // the weapon's own stats. Here the list IS the detector, so without these two a Kisten user
+            // would be told they lost every tick they attacked in.
             AnimationID.HUMAN_WEAPONS_CRIMSON_KISTEN_ATTACK,
             AnimationID.HUMAN_WEAPONS_CRIMSON_KISTEN_SPECIAL);
 

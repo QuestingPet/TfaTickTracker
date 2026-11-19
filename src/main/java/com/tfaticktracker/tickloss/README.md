@@ -661,11 +661,32 @@ The decision is now three-way:
 |---|---|---|
 | in `AttackAnimations` | a known attack | counts, re-seeds the cooldown |
 | in `NonAttackAnimations` | a known non-attack | does not count, does not re-seed |
-| in neither | **we do not know** | does not count, and the id is reported |
+| in neither | **we do not know** | does not count, and the id is reported if it ever hit anything |
 
 That third row is what makes the allowlist safe to use. The ids are held on the segment
 (`SegmentStats.getUnrecognisedAnimations`), printed at the bottom of the overlay and in the side panel, so a
 gap in the list arrives with the number it moved instead of quietly changing it.
+
+### Reporting is gated on having dealt damage
+
+Not every unrecognised animation is interesting. A boss mechanic that animates the player -- a knockback, a
+stun, being dragged somewhere -- is unrecognised too, and reporting all of them would turn the signal into
+noise inside one raid.
+
+What separates a weapon from a mechanic is whether the animation ever coincided with damage **we** dealt,
+which is what hitpoints experience means: every combat attack that connects grants it, and in a raid nothing
+else does (thralls deal damage and grant none). So `UnknownAnimations` holds a candidate for
+`WINDOW_TICKS` -- five, enough for a projectile to arrive -- and reports it only if hitpoints experience
+turns up in that window.
+
+**It cannot be the detector**, which is exactly why only the report uses it. A miss or a zero grants no
+experience, and a cooldown must still be re-seeded on a miss; a detector built on experience would ignore
+every attack that failed to connect, which at a raid boss is a great many. As a hint about a weapon nobody
+has listed it is safe: use it enough times and one of them lands.
+
+The replay has no experience in it -- `EventLogger` records no xp drops -- so a fixture never reports an
+unknown. That is acceptable precisely because this gates the report and not the measurement, and it is why
+`FixtureReplayTest` was unaffected by the whole change.
 
 ### What the audit found
 
@@ -694,24 +715,34 @@ November: **22 distinct animations**, which is what makes an allowlist tractable
 | `HUMAN_WEAPONS_CRIMSON_KISTEN_ATTACK` | 21 | 8 | 4 | **was unknown** |
 | `HUMAN_WEAPONS_CRIMSON_KISTEN_DEF` | 20 | 15 | 7 | non-attack |
 | `HUMAN_STAFFORB_BLOCK` | 17 | 8 | 4 | non-attack |
-| `HUMAN_TFA_SMALL_CHEST_OPEN` | 8 | 1 | 2 | **was unknown** |
+| `HUMAN_TFA_SMALL_CHEST_OPEN` | 8 | 1 | 2 | **unknown, loot room** |
 | `HUMAN_STAFF_BLOCK` | 3 | 2 | 2 | non-attack |
 
 Three things worth keeping:
 
 1. **Zero disagreements.** Nothing this project calls a non-attack is called an attack by attacktimer, and 24
    entries are marked non-attack by both. Two lists built from different sources, no contradiction.
-2. **The Kisten is why the list could not just be copied.** attacktimer has its block but neither of its
-   attacks, and it appears in 9 of the 44 raids. Taking that list as it stands would have told a Kisten user
-   they lost every tick they attacked in. Both ids are added here, marked as such.
-3. **`HUMAN_TFA_SMALL_CHEST_OPEN` was a live bug.** Opening a chest mid-fight counted as an attack and
-   re-seeded the cooldown, hiding real loss. Under the allowlist it is unrecognised, which is the honest
-   answer.
+2. **The Kisten is why the list could not just be copied.** attacktimer's data has its block but neither of
+   its attacks, and it appears in 9 of the 44 raids. Both ids are added here, marked as such.
+3. **`HUMAN_TFA_SMALL_CHEST_OPEN` cost nothing.** It is the loot room, which is not a fight room, so no
+   segment was ever open while it played. It is kept as the clearest example that the third category is
+   real: animations that are neither an attack nor a block do occur with an NPC targeted, and a denylist
+   has no answer for them except "attack".
 
-The 175 attack ids come from the Attack Timer Metronome plugin's `AnimationData`, which is BSD 2-Clause and
-whose notice is reproduced at the top of `AttackAnimations`. Its list is maintained by people who bought the
-weapons and tested them, annotated `// tested w/ fang` and the like, and it already splits attacks from
-`NON_ATTACK` -- the same three-way shape arrived at here.
+The 174 attack ids come from the Attack Timer Metronome plugin's `AnimationData`, which is BSD 2-Clause and
+whose notice is reproduced at the top of `AttackAnimations`. Its entries are annotated `// tested w/ fang`
+and the like -- people bought the weapons and checked.
+
+**Worth knowing what that data is to attacktimer: not a detector.** attacktimer decides an attack happened
+from the player interacting with a target, vetoed by a *blocklist*, and separately uses `AnimationData` for
+the combat skill and speed, falling back to the weapon's own item stats when it has never seen the
+animation. That is why a Kisten user still gets a correct 4 over their head there. Its list being incomplete
+costs it nothing; ours being incomplete would cost a whole room, which is the entire reason the unrecognised
+case is reported rather than swallowed. The sailing entry was dropped on the way across: it cannot happen in
+a raid.
+
+Its xp-drop handling is the same idea as the gate below, arrived at independently -- `onStatChanged` and
+`onFakeXpDrop` both re-run its attack logic.
 
 ### Finding a gap in either list
 

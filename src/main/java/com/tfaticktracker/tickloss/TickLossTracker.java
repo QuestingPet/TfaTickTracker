@@ -14,7 +14,10 @@ import net.runelite.api.Client;
 import net.runelite.api.NPC;
 import net.runelite.api.NPCComposition;
 import net.runelite.api.Player;
+import net.runelite.api.Skill;
+import net.runelite.api.events.FakeXpDrop;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.StatChanged;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.events.ChatMessage;
@@ -164,6 +167,8 @@ public class TickLossTracker {
         currentSpeed = 0;
         resetCandidates = 0;
         attackStart.reset();
+        unknownAnimations.reset();
+        hitpointsXp = -1;
         retargetedThisTick = false;
         voidExplosionThisTick = false;
         dudShotThisTick = false;
@@ -481,14 +486,48 @@ public class TickLossTracker {
 
         if (AttackAnimations.isAttack(animation)) return true;
 
-        // Neither a known attack nor a known non-attack. Not guessed at: it does not count as an attack,
-        // and it is recorded against the room so the gap shows up next to the number it moved instead of
-        // silently flattering it. See AttackAnimations.
+        // Neither a known attack nor a known non-attack. It does not count as an attack, and it is held
+        // aside until there is some reason to think it might have been one. See UnknownAnimations.
         if (current != null && AttackAnimations.isUnrecognised(animation)) {
-            current.noteUnrecognisedAnimation(animation);
-            log.debug("Tick loss: unrecognised animation {} while fighting, not counted as an attack", animation);
+            log.debug("Tick loss: unrecognised animation {} while fighting, not counted as an attack",
+                    animation);
+            unknownAnimations.seen(animation, client.getTickCount(), current);
         }
         return false;
+    }
+
+    /** Animations neither list knows, waiting to see whether any of them ever hit something. */
+    private final UnknownAnimations unknownAnimations = new UnknownAnimations();
+    /** Hitpoints experience as of the last reading, or -1 before the first one. */
+    private int hitpointsXp = -1;
+
+    /**
+     * Damage we dealt. Anything unrecognised just before it becomes a candidate worth reporting.
+     * <p>
+     * Both events are needed: {@link StatChanged} carries the ordinary drop, and {@link FakeXpDrop} is what
+     * arrives instead once the skill is at maximum experience, where the total stops moving. See
+     * {@link UnknownAnimations} for why damage is the test and why it is only the report that uses it.
+     */
+    @Subscribe
+    public void onStatChanged(StatChanged e) {
+        if (e.getSkill() != Skill.HITPOINTS) return;
+
+        final int xp = e.getXp();
+        if (hitpointsXp >= 0 && xp > hitpointsXp) reportUnknownsBackedByDamage();
+        hitpointsXp = xp;
+    }
+
+    @Subscribe
+    public void onFakeXpDrop(FakeXpDrop e) {
+        if (e.getSkill() == Skill.HITPOINTS) reportUnknownsBackedByDamage();
+    }
+
+    private void reportUnknownsBackedByDamage() {
+        for (UnknownAnimations.Entry entry : unknownAnimations.takeBackedByDamage(client.getTickCount())) {
+            entry.segment.noteUnrecognisedAnimation(entry.animation);
+            log.debug("Tick loss: animation {} landed a hit, so it is reported as a possible attack missing "
+                    + "from AttackAnimations", entry.animation);
+        }
     }
 
     /**

@@ -32,6 +32,11 @@ import java.util.regex.Pattern;
  *     <li><b>Weapon speed.</b> The log records no equipment, so speed is inferred from the attack animation
  *     via {@link #SPEED_BY_ANIMATION}. Good enough for the weapons actually used; the real speed logic lives
  *     in {@link WeaponSpeeds} and is not exercised here.</li>
+ *     <li><b>Unrecognised animations.</b> The replay never reports one. Deciding whether an unknown
+ *     animation was worth mentioning needs hitpoints experience, and {@code EventLogger} records no xp
+ *     drops, so the candidate never matures. That costs the fixtures nothing: the gate is on the REPORT
+ *     and not on the measurement, which is why switching from a denylist to an allowlist left every
+ *     committed fixture number untouched.</li>
  *     <li><b>Eating.</b> {@code EventLogger} records no menu clicks or inventory changes, so a confirmed eat
  *     cannot be reconstructed. Eat attribution is covered by scenarios in {@code AttackTimelineTest} instead.</li>
  * </ul>

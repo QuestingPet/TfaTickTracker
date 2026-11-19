@@ -70,9 +70,10 @@ public class AttackAnimationsTest {
     /**
      * The Crimson Kisten, which is why the allowlist could not just be copied.
      * <p>
-     * attacktimer has the Kisten's BLOCK but neither of its attacks, and the audit found both in 9 of the 44
-     * raids -- 218 attack starts between them. Taking that list as it stands would have told a Kisten user
-     * they lost every tick they attacked in.
+     * attacktimer's data has the Kisten's BLOCK but neither of its attacks, and the audit found both in 9 of
+     * the 44 raids, 226 attack starts between them. It costs attacktimer nothing, because there that data is
+     * a speed lookup and not the detector. Here the list IS the detector, so taking it as it stands would
+     * have told a Kisten user they lost every tick they attacked in.
      */
     @Test
     public void theKistenAttacksAreAttacks() {
@@ -81,11 +82,12 @@ public class AttackAnimationsTest {
     }
 
     /**
-     * Opening a chest mid-fight, which the denylist counted as an attack.
+     * Opening a chest is not an attack, though nothing was ever measured while one was open.
      * <p>
-     * A live bug the audit turned up: it re-seeded the attack cooldown off a tick spent opening a chest,
-     * which hid real loss. Under the allowlist it is unrecognised -- not an attack, and reported -- which is
-     * the correct answer for something neither list has an opinion about.
+     * The audit saw this in the loot room, which is not a fight room, so no segment was open and no figure
+     * was ever affected by it. It is kept as a case because it is the clearest example of the third
+     * category being real: animations that are neither an attack nor a block do happen with an NPC
+     * targeted, and the old denylist had no answer for them but "attack".
      */
     @Test
     public void openingAChestIsNotAnAttack() {

@@ -163,9 +163,27 @@ public class TickLossPanel extends PluginPanel {
         }
 
         addUnrecognisedNote(mine);
+        addMissingRaidersNote(others.size());
 
         revalidate();
         repaint();
+    }
+
+    /**
+     * Explains the empty space where the rest of the team should be.
+     * <p>
+     * Two separate things have to be true before somebody else's numbers can appear here: they have to be
+     * running this plugin, and they have to be in the same RuneLite party. Neither is visible from in here,
+     * so a raider who has done neither looks exactly like a raider who has done one of them -- absent. A
+     * panel that just shows fewer people than are in the raid reads as broken, and this is the difference
+     * between "broken" and "they need the plugin too".
+     */
+    private void addMissingRaidersNote(int showing) {
+        final int raiders = tracker.getParty().getRaidSize();
+        if (raiders <= 1 || showing >= raiders - 1) return;
+
+        cards.add(message("Only raiders running this plugin and in your RuneLite party appear here. "
+                + showing + " of " + (raiders - 1) + " others are sharing."));
     }
 
     /**

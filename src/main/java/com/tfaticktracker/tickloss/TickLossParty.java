@@ -223,6 +223,17 @@ public class TickLossParty {
     }
 
     /**
+     * How many people the raid itself lists, you included.
+     * <p>
+     * Read from the game's own raider varcs, not from the party, which is the point: it is how the panel
+     * can tell that somebody is in the raid and NOT showing up, and say why.
+     */
+    public int getRaidSize() {
+        final java.util.Set<String> raiders = raidState.getRaiderNames();
+        return raiders == null ? 0 : raiders.size();
+    }
+
+    /**
      * Whether this party member is also in the raid with us.
      * <p>
      * A raider who joins the party late needs no catch-up: they simply start appearing from the next room
