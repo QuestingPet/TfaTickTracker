@@ -50,8 +50,18 @@ final class UnknownAnimations {
      */
     static final int STARTS_BEFORE_REPORTING = 3;
 
-    /** At most this many watched at once, so a bad tick cannot grow the map without bound. */
-    private static final int MAX_TRACKED = 16;
+    /**
+     * At most this many watched at once, and at most this many ever mentioned, per raid.
+     * <p>
+     * Everything here is cleared when a raid starts, so neither bound is really about memory -- a raid is
+     * an hour at the outside. They are about the overlay. Five ids on screen is already past the point
+     * where anybody reads them, and a build with a list so wrong that six distinct animations are being
+     * miscounted does not need a sixth line to say so.
+     * <p>
+     * In a week of recorded raids the number of unknown animations was three, two of which were one weapon.
+     */
+    private static final int MAX_WATCHED = 8;
+    private static final int MAX_REPORTED = 5;
 
     private static final class Candidate {
         private int starts;
@@ -61,16 +71,21 @@ final class UnknownAnimations {
     }
 
     private final Map<Integer, Candidate> tracked = new LinkedHashMap<>();
+    private int reported;
 
+    /** A new raid. Nothing carries over, so a list fixed between raids stops being mentioned. */
     void reset() {
         tracked.clear();
+        reported = 0;
     }
 
     /** An animation neither list knows, which we have just counted as an attack. */
     void countedAsAttack(int animation, int tick) {
+        if (reported >= MAX_REPORTED) return;
+
         Candidate candidate = tracked.get(animation);
         if (candidate == null) {
-            if (tracked.size() >= MAX_TRACKED) return;
+            if (tracked.size() >= MAX_WATCHED) return;
             candidate = new Candidate();
             tracked.put(animation, candidate);
         }
@@ -102,11 +117,13 @@ final class UnknownAnimations {
     /**
      * The room is over. Which animations have earned a mention.
      * <p>
-     * Each is reported once per raid. Saying it again every room would make the overlay noisier the longer
-     * the problem goes unfixed, which is precisely backwards.
+     * Each is reported once per raid, and at most {@link #MAX_REPORTED} in all. Saying it again every room
+     * would make the overlay noisier the longer the problem goes unfixed, which is precisely backwards.
      */
     List<Integer> settle() {
         final List<Integer> report = new ArrayList<>();
+        if (reported >= MAX_REPORTED) return report;
+
         for (Map.Entry<Integer, Candidate> entry : tracked.entrySet()) {
             final Candidate candidate = entry.getValue();
             if (candidate.reported) continue;
@@ -115,6 +132,7 @@ final class UnknownAnimations {
 
             candidate.reported = true;
             report.add(entry.getKey());
+            if (++reported >= MAX_REPORTED) break;
         }
         return report;
     }

@@ -696,6 +696,10 @@ Each clause earns its place:
 - **When the room closes.** Mid-fight it would be noise, and the numbers it bears on are the room's.
 - **Once per raid.** Repeating it every room would make the overlay noisier the longer the problem went
   unfixed, which is precisely backwards.
+- **At most five per raid, watching at most eight.** Everything is cleared when a raid starts, so this is an
+  overlay bound rather than a memory one: five ids is already past what anybody reads, and a build wrong
+  enough to produce six does not need a sixth line to prove it. For scale, a week of recorded raids produced
+  three unknown animations, two of which were one weapon.
 
 It reports and never decides. An animation that trips this is still counted as an attack; all that happens
 is a line naming the id, in the overlay and in the side panel.

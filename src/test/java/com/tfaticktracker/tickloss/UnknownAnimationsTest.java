@@ -124,9 +124,14 @@ public class UnknownAnimationsTest {
         assertEquals("the third room is where it adds up", 1, unknown.settle().size());
     }
 
-    /** A flood of unknown animations cannot grow the map without bound. */
+    /**
+     * A flood of unknown animations says its piece and stops.
+     * <p>
+     * Not really a memory bound -- a raid clears everything -- but an overlay one. Five ids is already past
+     * what anybody reads, and a build wrong enough to produce six does not need a sixth line to prove it.
+     */
     @Test
-    public void watchesOnlyAHandfulAtATime() {
+    public void mentionsOnlyAHandfulPerRaid() {
         final UnknownAnimations unknown = new UnknownAnimations();
         for (int i = 0; i < 500; i++) {
             for (int n = 0; n < UnknownAnimations.STARTS_BEFORE_REPORTING; n++) {
@@ -134,7 +139,8 @@ public class UnknownAnimationsTest {
             }
         }
 
-        assertTrue("bounded well above anything real", unknown.settle().size() <= 16);
+        assertTrue("capped", unknown.settle().size() <= 5);
+        assertTrue("and it does not resume in the next room", unknown.settle().isEmpty());
     }
 
     /** A raid ending forgets everything, so the next one starts from nothing. */
