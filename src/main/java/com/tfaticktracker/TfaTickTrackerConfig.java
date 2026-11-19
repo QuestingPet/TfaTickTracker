@@ -4,6 +4,7 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
+import net.runelite.client.config.Range;
 
 @ConfigGroup(TfaTickTrackerPlugin.CONFIG_GROUP)
 public interface TfaTickTrackerConfig extends Config {
@@ -26,8 +27,7 @@ public interface TfaTickTrackerConfig extends Config {
     @ConfigItem(
             keyName = "shareWithParty",
             name = "Share With Party",
-            description = "Send your own room summaries to your party when a room finishes. Room totals "
-                    + "only, never anything per-attack.",
+            description = "Send your own room summaries to your party when a room finishes.",
             position = 2
     )
     default boolean shareWithParty() {
@@ -35,20 +35,30 @@ public interface TfaTickTrackerConfig extends Config {
     }
 
     /**
-     * Ticks of leeway at the start of a fight.
+     * Leeway for walking in, at the six side rooms only.
      * <p>
-     * Top level rather than buried, because it is the one number that changes what everybody's figure means:
-     * two people in a party comparing efficiency are only comparing like for like if they agree on it.
+     * Ezekiel, Bork, Moia, Dreadnoth, Dagonhai and Xarth are rooms you run into, so the boss can be alive
+     * and targetable a few ticks before you are anywhere near it. The Archive Guardian and Ocellus are not
+     * in that group and never get any: the Guardian activates where you already stand, and every Ocellus
+     * phase hands you its next target in place, so there is no walking to forgive.
+     * <p>
+     * Zero by default, because the honest default is to measure what happened -- and it is what the replay
+     * in the tests uses, so the committed fixture numbers and a live raid are measured the same way. Raise
+     * it if you would rather not see the run-in; the cap is four, beyond which it stops being leeway and
+     * starts being a discount. It is top level rather than buried because it is the one setting that
+     * changes what a number MEANS: two people comparing efficiency are only comparing like for like if
+     * they agree on it.
      */
+    @Range(min = 0, max = 4)
     @ConfigItem(
-            keyName = "startGraceTicks",
-            name = "Start Grace Ticks",
-            description = "Ticks of leeway at the start of each fight, so walking into range is not charged "
-                    + "as loss.",
+            keyName = "graceTicksOnEnter",
+            name = "Grace Ticks On Enter",
+            description = "Ticks of leeway when you walk into one of the six side rooms, so the run to the "
+                    + "boss is not charged as lost ticks. Does not apply at the Archive Guardian or Ocellus.",
             position = 3
     )
-    default int startGraceTicks() {
-        return 4;
+    default int graceTicksOnEnter() {
+        return 0;
     }
 
     /**

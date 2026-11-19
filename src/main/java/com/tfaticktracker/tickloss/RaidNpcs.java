@@ -132,11 +132,12 @@ final class RaidNpcs {
             .build();
 
     /**
-     * Rooms where the fight starts under you rather than being walked to. There is no excuse for not attacking on
-     * the first tick the target exists, so no opening leeway is granted: the Archive Guardian activates where you
-     * already stand, and every Ocellus phase hands you its next target in place.
+     * Rooms where the fight starts under you rather than being walked to, so the "Grace Ticks On Enter"
+     * setting does not apply however it is set. There is nothing to forgive: the Archive Guardian activates
+     * where you already stand, and every Ocellus phase hands you its next target in place. Everywhere else
+     * is one of the six side rooms, which you run into.
      */
-    private static final Set<RaidRoom> NO_START_GRACE = ImmutableSet.of(
+    private static final Set<RaidRoom> NO_ENTRY_GRACE = ImmutableSet.of(
             RaidRoom.ARCHIVE_GUARDIAN,
             RaidRoom.OCELLUS);
 
@@ -231,8 +232,8 @@ final class RaidNpcs {
         return LEAVES_UNATTACKABLE.getOrDefault(room, Collections.emptySet()).contains(animationId);
     }
 
-    static boolean hasStartGrace(RaidRoom room) {
-        return room != null && !NO_START_GRACE.contains(room);
+    static boolean hasEntryGrace(RaidRoom room) {
+        return room != null && !NO_ENTRY_GRACE.contains(room);
     }
 
     static Set<Integer> getRequired(RaidRoom room) {

@@ -245,8 +245,8 @@ public class TickLossTracker {
                 .attackStarted(attackStarted())
                 .weaponSpeed(currentSpeed)
                 .eatDelay(eatTracker.takeUnattributedDelay())
-                .graceOnOpen(RaidNpcs.hasStartGrace(raidState.getCurrentRoom())
-                        ? config.startGraceTicks() : 0)
+                .graceOnOpen(RaidNpcs.hasEntryGrace(raidState.getCurrentRoom())
+                        ? config.graceTicksOnEnter() : 0)
                 .cooldownReduction(voidExplosionThisTick
                         ? RaidNpcs.VOID_EXPLOSION_COOLDOWN_REDUCTION : 0)
                 .fightEnded(FightWindowState.endsTheFight(fightWindow.getState()))
