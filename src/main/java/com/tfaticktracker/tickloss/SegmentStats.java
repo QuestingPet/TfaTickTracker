@@ -4,6 +4,10 @@ import com.tfaticktracker.RaidRoom;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 /**
  * Counters for one room, or one phase within a room.
  * <p>
@@ -57,6 +61,25 @@ public class SegmentStats {
     private int earlyAttacks;
     @Getter
     private int endTick;
+
+    /**
+     * Animations seen in this fight that are in neither {@link AttackAnimations} nor
+     * {@link NonAttackAnimations}.
+     * <p>
+     * The whole reason an allowlist is safe to use. A gap in the lists cannot change a number quietly: the
+     * ids that were not understood are shown next to the figure they affected, so "my loss looks wrong"
+     * comes with the answer attached. Capped because a sender of nonsense -- or a bug -- must not be able
+     * to grow this without bound.
+     */
+    private final Set<Integer> unrecognised = new LinkedHashSet<>();
+
+    public Set<Integer> getUnrecognisedAnimations() {
+        return Collections.unmodifiableSet(unrecognised);
+    }
+
+    void noteUnrecognisedAnimation(int animationId) {
+        if (unrecognised.size() < 8) unrecognised.add(animationId);
+    }
 
     void tickInRoom() {
         ticksInRoom++;

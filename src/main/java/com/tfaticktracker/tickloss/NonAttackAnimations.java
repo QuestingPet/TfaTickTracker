@@ -6,35 +6,38 @@ import net.runelite.api.gameval.AnimationID;
 import java.util.Set;
 
 /**
- * Animations that mean "busy, but not attacking".
+ * Animations that are known NOT to be an attack. No longer the decision; the known-innocent set.
  * <p>
- * The attack test is "an attackable NPC is targeted and I am not idle", which is future proof for new weapons but
- * needs a veto list, because plenty of things replace the idle animation without being an attack. Without it, every
- * block and every eat re-seeds the attack cooldown and quietly hides real tick loss.
+ * {@link AttackAnimations} decides what an attack is. This list exists so that the things which obviously
+ * are not one -- blocks, eating, dying, drinking, summoning a thrall -- are recognised as such rather than
+ * coming out as "we have never heard of this", which would put an id on the overlay after every block you
+ * ever make. Its job is now to keep the unrecognised report meaningful, not to steer the measurement.
  * <p>
- * Scale of the problem, measured from a real solo Archive Guardian attempt
- * (debug-logs/tfa-events-20261112-135412.log, ticks 513-750): 19 genuine attack animations
- * (HUMAN_GLAIVE_RALOS01_CHARGED_THROW, HUMAN_GLAIVE_RALOS01_CHARGED_SPECIAL, HUMAN_ELDER_MAUL_ATTACK) against 31
+ * It was the decision until the audit of 11-18 November. As a denylist it failed in the direction nobody
+ * notices: anything not listed re-seeded the attack cooldown, so a missing entry HID loss and the number
+ * came out flattering. The audit found two kinds of hole at once -- opening a chest mid-fight was being
+ * counted as an attack, and attacktimer's own non-attack list contains 62 animations we had no entry for,
+ * among them high alchemy, teleports, pickpocketing and vengeance, every one of which a raider can do
+ * while fighting.
+ * <p>
+ * Keeping it has one more benefit: it cross-checks the allowlist. 24 of its entries are also marked
+ * NON_ATTACK by attacktimer and NOT ONE of its entries is called an attack there, which is the strongest
+ * statement available that the two lists built from different sources agree.
+ * <p>
+ * Scale of the original problem, measured from a real solo Archive Guardian attempt
+ * (debug-logs/tfa-events-20261112-135412.log, ticks 513-750): 19 genuine attack animations against 31
  * non-attacks -- 13 HUMAN_UNARMEDBLOCK, 13 HUMAN_ELDER_MAUL_BLOCK and 5 HUMAN_EAT.
  * <p>
- * Generated from the AnimationID gameval names rather than typed by hand. The asymmetry matters: a missing entry
- * under-reports loss, a wrong entry over-reports it, which is worse, so Tele Block (a real attack) and the
- * HUMAN_PUSH_* animations are deliberately excluded despite matching on name.
- * <p>
- * <b>How a gap in this list is found.</b> It is a denylist and will never be complete -- weapons arrive with
- * their own block animations and nothing announces them. The check that finds the gaps asks, of every
- * animation counted as an attack, how often it BEGAN on a tick we were being hit: you only block because
- * something hit you, so a block clusters near 100% while a real attack sits far below. Measured across the
- * recorded raids: scythe block 96%, shield defence 85%, unarmed block 89%, against twisted bow 28%, scythe
- * 33% and Ralos glaive 15%. HUMAN_SHIELD_DEFENCE, HUMAN_SHADE_DEFENCE and PREPOT_DEVICE_DRINK_FULL were all
- * found that way.
+ * <b>How a gap in a list is found.</b> Ask, of every animation, how often it BEGAN on a tick we were being
+ * hit: you only block because something hit you, so a block clusters near 100% while a real attack sits far
+ * below. Measured across the recorded raids: scythe block 96%, shield defence 85%, unarmed block 89%,
+ * against twisted bow 28%, scythe 33% and Ralos glaive 15%. HUMAN_SHIELD_DEFENCE, HUMAN_SHADE_DEFENCE and
+ * PREPOT_DEVICE_DRINK_FULL were all found that way.
  * <p>
  * An earlier version of that check asked whether the animation ever DEALT damage, and failed completely: the
  * shield block scored 77%, because mid-fight there are always projectiles landing. Hitsplats say what reached
- * a target, never what you did on a given tick. If this list ever needs auditing again, measure "was I being
- * hit", not "did I deal damage". The tests no longer read debug-logs/ -- they run on the fixtures under
- * src/test/resources/tickloss-fixtures/ -- but the recorded raids are still there to measure against, and
- * nine fixtures are not enough to separate a block from an attack on their own.
+ * a target, never what you did on a given tick. If a list ever needs auditing again, measure "was I being
+ * hit", not "did I deal damage".
  */
 final class NonAttackAnimations {
 

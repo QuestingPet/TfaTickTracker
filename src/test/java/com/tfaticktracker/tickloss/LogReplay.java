@@ -495,7 +495,7 @@ public final class LogReplay {
 
             // "Attackable" is a composition lookup, so an older log can only say the target is an NPC.
             final boolean hasTarget = loggedTargetAttackable != null ? loggedTargetAttackable : targetIsNpc;
-            final boolean attacking = hasTarget && myAnim != -1 && !NonAttackAnimations.isNonAttack(myAnim);
+            final boolean attacking = hasTarget && AttackAnimations.isAttack(myAnim);
             // Frames are what separate a re-attack from an animation still playing. Logs written before frame
             // logging have none, so fall back to the animation changing, which misses repeats sharing an id.
             // Frames do not advance one per tick, so a repeat can show the same frame twice -- two undead

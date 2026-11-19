@@ -646,18 +646,77 @@ Modelling it moved 707 attacks at Ocellus P3 out of "early, cause unknown" and i
 went from 518 early to 56 and `SCYTHE_OF_VITUR_ATTACK` from 354 to 109. The loss those misses represent now
 shows up instead of vanishing into an unexplained reset.
 
-## The veto list is a denylist, so something has to find its gaps
+## Attacks come from an allowlist, and an unknown animation says so
 
-`NonAttackAnimations` is 86 names, generated from the gameval list by matching BLOCK and DEFEND. It will
-never be complete: weapons arrive with their own block animations and nothing announces them. An unlisted
-one silently counts as an attack and re-seeds the cooldown off a tick spent defending, which **hides real
-loss**. That is not a hypothetical -- `HUMAN_SHIELD_DEFENCE` is spelled DEFENCE rather than DEFEND, slipped
-through the generator, and accounted for 217 "early attacks" before anyone noticed.
+Until the audit of 11-18 November this was the other way round: `NonAttackAnimations` was the decision, and
+anything not on it counted as an attack. That fails in the direction nobody notices. A missing entry let some
+unrelated animation re-seed the attack cooldown, which **hides** loss, so the number came out flattering and
+silent. An allowlist fails the other way -- an unlisted weapon registers no attacks and its room reads as
+enormous loss -- which gets reported within one raid. A loud wrong answer is worth more than a quiet one,
+because only the loud one gets fixed.
 
-So the audit looks for the gaps rather than hoping the list is exhaustive. It is not currently a
-test -- the fixtures are nine solo slices and far too thin to separate a block from an attack --
-so re-running it means measuring over `debug-logs/` again. **You only block because something hit you**, so a block clusters near 100% of its starts on
-a tick you took damage, while a real attack sits far lower:
+The decision is now three-way:
+
+| | meaning | effect |
+|---|---|---|
+| in `AttackAnimations` | a known attack | counts, re-seeds the cooldown |
+| in `NonAttackAnimations` | a known non-attack | does not count, does not re-seed |
+| in neither | **we do not know** | does not count, and the id is reported |
+
+That third row is what makes the allowlist safe to use. The ids are held on the segment
+(`SegmentStats.getUnrecognisedAnimations`), printed at the bottom of the overlay and in the side panel, so a
+gap in the list arrives with the number it moved instead of quietly changing it.
+
+### What the audit found
+
+Every animation the local player showed while targeting an NPC inside a raid, across 44 logs from 11-18
+November: **22 distinct animations**, which is what makes an allowlist tractable at all.
+
+| | ticks | starts | logs | verdict |
+|---|---|---|---|---|
+| `HUMAN_BOW` | 12662 | 7578 | 14 | attack |
+| `SCYTHE_OF_VITUR_ATTACK` | 9428 | 4386 | 9 | attack |
+| `SNAKEBOSS_BLOWPIPE_ATTACK` | 3270 | 2132 | 13 | attack |
+| `HUMAN_UNARMEDBLOCK` | 3140 | 1418 | 17 | non-attack |
+| `ZCB_ATTACK_PVN` | 1674 | 700 | 9 | attack |
+| `HUMAN_WEAPON_BOW_VENATOR01_SHOOT` | 1259 | 684 | 9 | attack |
+| `HUMAN_SCYTHE_BLOCK` | 1063 | 683 | 9 | non-attack |
+| `HUMAN_GLAIVE_RALOS01_CHARGED_SPECIAL` | 820 | 395 | 9 | attack |
+| `HUMAN_SPELLCAST_RESURRECT` | 722 | 353 | 9 | non-attack |
+| `HUMAN_SPELLCAST_GRASP` | 662 | 349 | 9 | attack |
+| `HUMAN_WEAPONS_CRIMSON_KISTEN_SPECIAL` | 450 | 218 | 9 | **was unknown** |
+| `HUMAN_CAST_SELFIMBUE` | 347 | 145 | 9 | non-attack |
+| `TOA_SOT_CAST_B` | 266 | 151 | 8 | attack |
+| `HUMAN_EAT` | 220 | 63 | 12 | non-attack |
+| `HUMAN_SPEAR_BLOCK` | 205 | 72 | 12 | non-attack |
+| `HUMAN_UNARMEDKICK` | 76 | 42 | 4 | attack |
+| `HUMAN_GLAIVE_RALOS01_CHARGED_THROW` | 44 | 27 | 4 | attack |
+| `HUMAN_WEAPONS_CRIMSON_KISTEN_ATTACK` | 21 | 8 | 4 | **was unknown** |
+| `HUMAN_WEAPONS_CRIMSON_KISTEN_DEF` | 20 | 15 | 7 | non-attack |
+| `HUMAN_STAFFORB_BLOCK` | 17 | 8 | 4 | non-attack |
+| `HUMAN_TFA_SMALL_CHEST_OPEN` | 8 | 1 | 2 | **was unknown** |
+| `HUMAN_STAFF_BLOCK` | 3 | 2 | 2 | non-attack |
+
+Three things worth keeping:
+
+1. **Zero disagreements.** Nothing this project calls a non-attack is called an attack by attacktimer, and 24
+   entries are marked non-attack by both. Two lists built from different sources, no contradiction.
+2. **The Kisten is why the list could not just be copied.** attacktimer has its block but neither of its
+   attacks, and it appears in 9 of the 44 raids. Taking that list as it stands would have told a Kisten user
+   they lost every tick they attacked in. Both ids are added here, marked as such.
+3. **`HUMAN_TFA_SMALL_CHEST_OPEN` was a live bug.** Opening a chest mid-fight counted as an attack and
+   re-seeded the cooldown, hiding real loss. Under the allowlist it is unrecognised, which is the honest
+   answer.
+
+The 175 attack ids come from the Attack Timer Metronome plugin's `AnimationData`, which is BSD 2-Clause and
+whose notice is reproduced at the top of `AttackAnimations`. Its list is maintained by people who bought the
+weapons and tested them, annotated `// tested w/ fang` and the like, and it already splits attacks from
+`NON_ATTACK` -- the same three-way shape arrived at here.
+
+### Finding a gap in either list
+
+**You only block because something hit you**, so a block clusters near 100% of its starts on a tick you took
+damage, while a real attack sits far lower:
 
 | | starts | while being hit |
 |---|---|---|
@@ -671,13 +730,10 @@ a tick you took damage, while a real attack sits far lower:
 | `HUMAN_BOW` | 23385 | 28% |
 | `HUMAN_GLAIVE_RALOS01_CHARGED_SPECIAL` | 968 | 15% |
 
-Anything counted as an attack at 70% or above is flagged. Un-veto the shield and it reports at 82% with a
-SUSPECT marker, which is the check that it works. The bands do overlap at the edges, so it reports rather
-than fails.
-
-A first attempt asked whether the animation ever DEALT damage instead, and failed completely: the shield
-block scored 77%, because mid-fight there are always projectiles landing. Hitsplats say what reached a
-target, never what you did on a given tick -- the same trap as always.
+The bands overlap at the edges, so this reports rather than decides. A first attempt asked whether the
+animation ever DEALT damage instead, and failed completely: the shield block scored 77%, because mid-fight
+there are always projectiles landing. Hitsplats say what reached a target, never what you did on a given
+tick -- the same trap as always.
 
 ## Known gaps
 

@@ -1,7 +1,9 @@
 package com.tfaticktracker.tickloss;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.tfaticktracker.RaidRoom;
 import lombok.Getter;
@@ -85,7 +87,35 @@ final class TickLossSummary {
         addCurrentFight(rows, view);
         addRooms(rows, view);
         addParty(rows, view);
+        addUnrecognised(rows, view);
         return rows;
+    }
+
+    /**
+     * Animations this build has never heard of, and what to do about them.
+     * <p>
+     * The safety net under {@link AttackAnimations}. Deciding attacks from an allowlist means an animation
+     * nobody has listed registers no attack, which inflates the loss for that room -- so the ids that were
+     * not understood are printed, and the number above them stops being a mystery.
+     * <p>
+     * Last in the overlay, on purpose. Everything above it is fixed height so nothing shifts under your eyes
+     * mid-fight; this appears only when something is actually wrong, and at the bottom it has nothing below
+     * it to shunt.
+     */
+    private static void addUnrecognised(List<Row> rows, View view) {
+        final Set<Integer> ids = new LinkedHashSet<>();
+        if (view.activeRoom != null) ids.addAll(view.activeRoom.getUnrecognisedAnimations());
+        for (SegmentStats room : view.rooms) ids.addAll(room.getUnrecognisedAnimations());
+        if (ids.isEmpty()) return;
+
+        blank(rows);
+        rows.add(new Row("Unrecognised animations", null, Tone.HEADING));
+        final StringBuilder list = new StringBuilder();
+        for (Integer id : ids) {
+            if (list.length() > 0) list.append(", ");
+            list.append(id);
+        }
+        rows.add(new Row("Not counted as attacks", list.toString(), Tone.QUIET));
     }
 
     /**

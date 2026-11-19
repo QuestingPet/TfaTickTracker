@@ -479,8 +479,16 @@ public class TickLossTracker {
         final int animation = local.getAnimation();
         if (animation == -1) return false;
 
-        // Eating replaces the idle animation, so without this a non-attacking eat reads as an attack
-        return !NonAttackAnimations.isNonAttack(animation);
+        if (AttackAnimations.isAttack(animation)) return true;
+
+        // Neither a known attack nor a known non-attack. Not guessed at: it does not count as an attack,
+        // and it is recorded against the room so the gap shows up next to the number it moved instead of
+        // silently flattering it. See AttackAnimations.
+        if (current != null && AttackAnimations.isUnrecognised(animation)) {
+            current.noteUnrecognisedAnimation(animation);
+            log.debug("Tick loss: unrecognised animation {} while fighting, not counted as an attack", animation);
+        }
+        return false;
     }
 
     /**

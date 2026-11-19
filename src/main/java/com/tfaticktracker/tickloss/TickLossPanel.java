@@ -162,8 +162,32 @@ public class TickLossPanel extends PluginPanel {
             }
         }
 
+        addUnrecognisedNote(mine);
+
         revalidate();
         repaint();
+    }
+
+    /**
+     * Says so when a number above it was measured with an animation we did not understand.
+     * <p>
+     * Attacks are decided from an allowlist, so an animation nobody has listed registers no attack and the
+     * room it happened in reads high. That is the deliberate trade -- a loud wrong answer rather than a
+     * quiet one -- and this is the half that makes it loud.
+     */
+    private void addUnrecognisedNote(List<SegmentStats> mine) {
+        final Set<Integer> ids = new LinkedHashSet<>();
+        for (SegmentStats segment : mine) ids.addAll(segment.getUnrecognisedAnimations());
+        if (tracker.getCurrent() != null) ids.addAll(tracker.getCurrent().getUnrecognisedAnimations());
+        if (ids.isEmpty()) return;
+
+        final StringBuilder list = new StringBuilder();
+        for (Integer id : ids) {
+            if (list.length() > 0) list.append(", ");
+            list.append(id);
+        }
+        cards.add(message("Unrecognised animations: " + list + ". These were not counted as attacks, so "
+                + "those rooms may read as more loss than you had. Worth reporting."));
     }
 
     /** The by-raider / by-room switch, as two halves of one control. */

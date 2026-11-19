@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -570,6 +571,37 @@ public class TickLossSummaryTest {
      * row in the summary once it finishes. The heading carries no value, so the one worth asserting on is
      * the first row that actually has one.
      */
+    // --- when a list has a gap in it --------------------------------------------------------------------
+
+    /**
+     * An animation neither list knows about is named on the overlay, under the numbers it affected.
+     * <p>
+     * This is the half of the allowlist that makes it safe. Deciding attacks from a list means an unlisted
+     * weapon registers nothing and its room reads as enormous loss; printing the ids turns that from a
+     * baffling figure into a reportable one. The row only ever appears when something is actually wrong.
+     */
+    @Test
+    public void namesAnimationsItDidNotUnderstand() {
+        final SegmentStats room = segment(RaidRoom.BORK, null, 100, 20, 0, 0);
+        room.noteUnrecognisedAnimation(15103);
+        room.noteUnrecognisedAnimation(14253);
+
+        final List<TickLossSummary.Row> rows = TickLossSummary.rows(view(room, Collections.singletonList(room), null, null));
+
+        assertEquals("15103, 14253", rightOf(rows, "Not counted as attacks"));
+    }
+
+    /** And says nothing at all when every animation was understood, which is almost always. */
+    @Test
+    public void staysQuietWhenEverythingWasUnderstood() {
+        final SegmentStats room = segment(RaidRoom.BORK, null, 100, 20, 0, 0);
+
+        final List<TickLossSummary.Row> rows = TickLossSummary.rows(view(room, Collections.singletonList(room), null, null));
+
+        assertNull(rightOf(rows, "Not counted as attacks"));
+        assertNull(toneOf(rows, "Unrecognised animations"));
+    }
+
     private static String rightOf(List<TickLossSummary.Row> rows, String left) {
         for (TickLossSummary.Row row : rows) {
             if (row.getLeft().equals(left) && row.getRight() != null) return row.getRight();
