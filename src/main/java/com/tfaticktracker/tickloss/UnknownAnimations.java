@@ -1,112 +1,119 @@
 package com.tfaticktracker.tickloss;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Animations in neither list, held back until there is a reason to think they were an attack.
+ * Animations in neither list, counted as attacks, watched for signs that they should not have been.
  * <p>
- * Being unrecognised is not on its own worth telling anybody about. A boss mechanic that animates the
- * player -- a knockback, a stun, being dragged somewhere -- is unrecognised too, and reporting every one of
- * those would turn the signal into noise inside one raid.
+ * {@link NonAttackAnimations} decides, and its default is that an animation nobody has listed is an attack.
+ * That default is right far more often than not -- it survives a weapon nobody has listed, and an attack
+ * whose animation was overridden by something else -- but it is wrong for anything that merely animates you
+ * while you fight, and when it is wrong it re-seeds the attack cooldown and HIDES loss. A flattering number
+ * is one nobody reports, so the gap has to find itself.
  * <p>
- * What separates the two is whether the animation coincided with damage WE dealt, which is what hitpoints
- * experience means: every combat attack that connects grants it, and in a raid nothing else does -- thralls
- * deal damage and grant none. So an unknown animation is reported only once hitpoints experience turns up
- * soon after it.
+ * <b>What gives it away is damage.</b> Every attack that connects grants hitpoints experience, on the tick
+ * of the attack, and in a raid nothing else does -- thralls deal damage and grant none. One attack can miss,
+ * and two can, but an animation counted as an attack {@link #STARTS_BEFORE_REPORTING} times that has never
+ * once produced damage is much more likely to be something that is not an attack at all.
  * <p>
- * <b>This cannot be the attack detector</b>, which is exactly why it only gates the report. A miss or a zero
- * grants no experience at all, and a cooldown must still be re-seeded on a miss -- a detector built on this
- * would ignore every attack that failed to connect, which at a raid boss is a great many of them. As a hint
- * about a weapon nobody has listed it is much safer: use it enough times and one of them lands.
+ * So it reports rather than decides, and only on the way out of a room. Nothing here changes a number.
  * <p>
- * Pure, with the client kept out, so the windowing can be read in a test rather than inferred from a raid.
+ * Tallies run across the whole raid, not per room: an animation used once a room would never reach the
+ * threshold inside one. Pure, with the client kept out, so the rule can be read in a test rather than
+ * inferred from a raid.
  */
 final class UnknownAnimations {
 
     /**
-     * How long after an animation its experience can still arrive.
+     * How long after an attack its experience can still arrive.
      * <p>
      * Hitpoints experience lands on the tick of the attack itself, not when the hitsplat reaches the NPC --
      * confirmed by the player, who is the only one able to confirm in-game behaviour here. One tick of slack
      * is kept because attacktimer allows the same, which suggests it can occasionally arrive late.
      * <p>
-     * The project's own measurement of animation-to-hitsplat is therefore NOT what sizes this, and is worth
-     * writing down only to say why: over the 44 recorded raids our own hitsplat lands at +1 for 85% of 4384
-     * scythe swings, +0 for 86% of blowpipe shots, and anywhere from +0 to +4 for a bow. Experience that
-     * waited for the hit would need a window of five. It does not.
-     * <p>
-     * <b>Hitsplats were considered as the signal instead and rejected.</b> They are delayed by exactly that
-     * travel time, they are not guaranteed to appear in every case, and with attacks in flight they can
+     * <b>Hitsplats were considered as the signal instead and rejected.</b> They are delayed by the time a
+     * projectile takes, they are not guaranteed to appear in every case, and with attacks in flight they can
      * arrive out of order. Experience is immediate and unambiguous, which is the whole reason to use it.
      */
     static final int WINDOW_TICKS = 1;
 
-    /** At most this many held at once, so a bad tick cannot grow the list without bound. */
-    private static final int MAX_PENDING = 16;
+    /**
+     * How many times an animation has to be counted as an attack, having never produced damage, before it
+     * is worth mentioning.
+     * <p>
+     * Three, because one attack missing says nothing and two says very little. A real weapon that has swung
+     * three times and connected on none of them is possible and does happen, which is exactly why this ends
+     * in a line of text rather than in a different number.
+     */
+    static final int STARTS_BEFORE_REPORTING = 3;
 
-    static final class Entry {
-        final int animation;
-        final int tick;
-        final SegmentStats segment;
+    /** At most this many watched at once, so a bad tick cannot grow the map without bound. */
+    private static final int MAX_TRACKED = 16;
 
-        Entry(int animation, int tick, SegmentStats segment) {
-            this.animation = animation;
-            this.tick = tick;
-            this.segment = segment;
-        }
+    private static final class Candidate {
+        private int starts;
+        private int backedByDamage;
+        private int lastStartTick = Integer.MIN_VALUE;
+        private boolean reported;
     }
 
-    private final List<Entry> pending = new ArrayList<>();
+    private final Map<Integer, Candidate> tracked = new LinkedHashMap<>();
 
     void reset() {
-        pending.clear();
+        tracked.clear();
+    }
+
+    /** An animation neither list knows, which we have just counted as an attack. */
+    void countedAsAttack(int animation, int tick) {
+        Candidate candidate = tracked.get(animation);
+        if (candidate == null) {
+            if (tracked.size() >= MAX_TRACKED) return;
+            candidate = new Candidate();
+            tracked.put(animation, candidate);
+        }
+        candidate.starts++;
+        candidate.lastStartTick = tick;
     }
 
     /**
-     * An animation we did not recognise, during a fight. Held, not reported.
+     * We dealt damage. Anything counted as an attack on this tick has just proved itself.
      * <p>
-     * One candidate per animation per segment, re-stamped each tick it is still showing. An animation
-     * lasting several ticks would otherwise fill the list on its own and crowd out everything after it,
-     * and with a one tick window its first sighting would go stale before the tick it mattered on.
+     * Proving one occurrence is enough for good: an animation that has ever dealt damage is an attack, and
+     * the misses after it say nothing new.
      */
-    void seen(int animation, int tick, SegmentStats segment) {
-        if (segment == null) return;
-
-        final Iterator<Entry> entries = pending.iterator();
-        while (entries.hasNext()) {
-            final Entry entry = entries.next();
-            if (entry.animation == animation && entry.segment == segment) {
-                // Still showing. Re-stamp rather than keep the first sighting, or an animation lasting
-                // several ticks would fall outside the window before the tick it earned anything on.
-                entries.remove();
-                break;
-            }
+    void damageDealt(int tick) {
+        for (Candidate candidate : tracked.values()) {
+            final int age = tick - candidate.lastStartTick;
+            if (age >= 0 && age <= WINDOW_TICKS) candidate.backedByDamage++;
         }
-        if (pending.size() >= MAX_PENDING) return;
-        pending.add(new Entry(animation, tick, segment));
     }
 
     /**
-     * We just dealt damage. Anything unrecognised in the last few ticks is now a candidate.
+     * The room is over. Which animations have earned a mention.
      * <p>
-     * Also the only place stale entries are dropped, which is enough: an animation that never once coincided
-     * with damage is not a weapon, and holding it costs a slot that {@link #MAX_PENDING} already bounds.
+     * Each is reported once per raid. Saying it again every room would make the overlay noisier the longer
+     * the problem goes unfixed, which is precisely backwards.
      */
-    List<Entry> takeBackedByDamage(int tick) {
-        final List<Entry> reported = new ArrayList<>();
-        final Iterator<Entry> entries = pending.iterator();
-        while (entries.hasNext()) {
-            final Entry entry = entries.next();
-            final int age = tick - entry.tick;
-            if (age < 0 || age > WINDOW_TICKS) {
-                if (age > WINDOW_TICKS) entries.remove();
-                continue;
-            }
-            reported.add(entry);
-            entries.remove();
+    List<Integer> settle() {
+        final List<Integer> report = new ArrayList<>();
+        for (Map.Entry<Integer, Candidate> entry : tracked.entrySet()) {
+            final Candidate candidate = entry.getValue();
+            if (candidate.reported) continue;
+            if (candidate.backedByDamage > 0) continue;
+            if (candidate.starts < STARTS_BEFORE_REPORTING) continue;
+
+            candidate.reported = true;
+            report.add(entry.getKey());
         }
-        return reported;
+        return report;
+    }
+
+    /** How many times this animation has been counted as an attack. For tests and the debug overlay. */
+    int startsOf(int animation) {
+        final Candidate candidate = tracked.get(animation);
+        return candidate == null ? 0 : candidate.starts;
     }
 }

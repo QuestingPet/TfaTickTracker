@@ -576,9 +576,9 @@ public class TickLossSummaryTest {
     /**
      * An animation neither list knows about is named on the overlay, under the numbers it affected.
      * <p>
-     * This is the half of the allowlist that makes it safe. Deciding attacks from a list means an unlisted
-     * weapon registers nothing and its room reads as enormous loss; printing the ids turns that from a
-     * baffling figure into a reportable one. The row only ever appears when something is actually wrong.
+     * The denylist counts an unlisted animation as an attack, so a gap in it makes a room read better than
+     * it was -- the kind of error nobody reports. Printing the ids is what turns a flattering number into a
+     * reportable one. The row only ever appears when something is actually wrong.
      */
     @Test
     public void namesAnimationsItDidNotUnderstand() {
@@ -588,7 +588,7 @@ public class TickLossSummaryTest {
 
         final List<TickLossSummary.Row> rows = TickLossSummary.rows(view(room, Collections.singletonList(room), null, null));
 
-        assertEquals("15103, 14253", rightOf(rows, "Not counted as attacks"));
+        assertEquals("15103, 14253", rightOf(rows, "Counted, never hit"));
     }
 
     /** And says nothing at all when every animation was understood, which is almost always. */
@@ -598,7 +598,7 @@ public class TickLossSummaryTest {
 
         final List<TickLossSummary.Row> rows = TickLossSummary.rows(view(room, Collections.singletonList(room), null, null));
 
-        assertNull(rightOf(rows, "Not counted as attacks"));
+        assertNull(rightOf(rows, "Counted, never hit"));
         assertNull(toneOf(rows, "Unrecognised animations"));
     }
 

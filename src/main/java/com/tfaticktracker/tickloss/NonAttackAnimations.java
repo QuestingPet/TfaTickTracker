@@ -146,7 +146,85 @@ final class NonAttackAnimations {
             AnimationID.TFA_HUMAN_OBLIGATOR_DEF,
             AnimationID.TFA_HUMAN_OBLIGATOR_DEF_FEMALE,
             AnimationID.TFA_HUMAN_ZORYA_TOME_DEFEND,
-            AnimationID.TFA_HUMAN_ZORYA_TOME_DEFEND_FEMALE);
+            AnimationID.TFA_HUMAN_ZORYA_TOME_DEFEND_FEMALE,
+
+            // Greater Corruption, which is a buff rather than an attack -- the same family as a thrall or
+            // Mark of Darkness, confirmed by the player, who is the only one able to confirm in-game
+            // behaviour here. The awkward part is that the id is shared: HUMAN_SPELLCAST_DEMONBANE is also
+            // the Demonbane spells, which ARE attacks. One animation, two meanings, and no way to tell them
+            // apart from the animation alone. It sits here because this plugin only ever measures inside
+            // The Fractured Archives, where the cast being made is the corruption; in a demon-slaying
+            // context this entry would be wrong. attacktimer has the same collision and says so in its own
+            // comment on the entry.
+            AnimationID.HUMAN_SPELLCAST_DEMONBANE,
+
+            // Blocks and defends attacktimer knew about and we did not
+            AnimationID.BARROW_GUTHAN_DEFEND,
+            AnimationID.BRAIN_PLAYER_ANCHOR_DEFEND,
+            AnimationID.DH_SWORD_UPDATE_DEFEND,
+            AnimationID.IVANDIS_FLAIL_DEFEND,
+            AnimationID.SLAYER_ABYSSAL_WHIP_DEFEND,
+            AnimationID.SLAYER_GRANITE_MAUL_DEFEND,
+            AnimationID.WARGUILD_PARRY_DEFEND,
+            AnimationID.WILD_CAVE_CHAINMACE_DEFEND,
+            // Spells that are not attacks: buffs, vengeance, spellbook swaps, utility casts
+            AnimationID.ARCEUUS_NECROMANCY_PLAYERANIM,
+            AnimationID.DREAM_PLAYER_HUMIDIFY_SPELL,
+            AnimationID.DREAM_PLAYER_MONSTEREXAM_STATSPY,
+            AnimationID.DREAM_PLAYER_SPELLBOOK_SWAP,
+            AnimationID.HUMAN_CAST_OFFERING,
+            AnimationID.HUMAN_CHINCHOMPA_ATTACK,
+            AnimationID.HUMAN_KILLERWATT_ELECTRICSHOCK,
+            AnimationID.HUMAN_SPELLCAST_SHADOWVEIL,
+            AnimationID.LUNAR_HUMAN_MAGIC_GEOMANCY,
+            AnimationID.LUNAR_HUMAN_MAGIC_SUMMON2,
+            AnimationID.QUEST_LUNAR_PUSHING_MAGIC_ANIMATION,
+            AnimationID.QUEST_LUNAR_SPELL_CAST_SPELL_ON_GROUP,
+            AnimationID.VENGEANCE_SPELL_ANIM_NOSTALLING,
+            AnimationID.VENGEANCE_SPELL_ANIM_STALLING,
+            // Teleports
+            AnimationID.HUMAN_TELEPORT_OTHER_IMPACT,
+            AnimationID.TELEPORT_NARDAH_HUMAN,
+            // Skilling and other things you can do with a target selected
+            AnimationID.FOSSIL_LOC_CLAM_IDLE_SHUT,
+            AnimationID.HUMAN_CASTBONESTOBANANAS,
+            AnimationID.HUMAN_CASTHIGHLVLALCHEMY,
+            AnimationID.HUMAN_CASTLOWLVLALCHEMY,
+            AnimationID.HUMAN_CRAFTING_SPIKEDVAMBRACES,
+            AnimationID.HUMAN_FLETCHING,
+            AnimationID.HUMAN_FLETCHING_ADD_DART_FEATHERS_ADAMANT,
+            AnimationID.HUMAN_FLETCHING_ADD_DART_FEATHERS_AMETHYST,
+            AnimationID.HUMAN_FLETCHING_ADD_DART_FEATHERS_BRONZE,
+            AnimationID.HUMAN_FLETCHING_ADD_DART_FEATHERS_DRAGON,
+            AnimationID.HUMAN_FLETCHING_ADD_DART_FEATHERS_IRON,
+            AnimationID.HUMAN_FLETCHING_ADD_DART_FEATHERS_MITHRIL,
+            AnimationID.HUMAN_FLETCHING_ADD_DART_FEATHERS_RUNE,
+            AnimationID.HUMAN_FLETCHING_ADD_DART_FEATHERS_STEEL,
+            AnimationID.HUMAN_FLETCHING_HUNTINGBOLTS,
+            AnimationID.HUMAN_HUNTING_DISMANTLE_NET,
+            AnimationID.HUMAN_LAYTRAP,
+            AnimationID.HUMAN_PICKPOCKET,
+            AnimationID.HUMAN_SALAMANDER_TAR_GRIND,
+            AnimationID.HUNTING_SETTING_TRAP_SMALL,
+            AnimationID.SLAYER_SALT_SPRINKLE,
+            // Sailing, which cannot happen in a raid
+            AnimationID.HUMAN_SAILING_ALPHA_HELM_RAFT01_ACTIVE01,
+            AnimationID.HUMAN_SAILING_ALPHA_HELM_RAFT01_ACTIVE01_LOOP,
+            AnimationID.HUMAN_SAILING_ALPHA_HELM_RAFT01_TRIM_SAILS01,
+            AnimationID.HUMAN_SAILING_ALPHA_HELM_RAFT01_TRIM_SAILS01_LOOP,
+            AnimationID.HUMAN_SAILING_ALPHA_HELM_RAFT01_TRIM_SAILS02,
+            AnimationID.HUMAN_SAILING_ALPHA_HELM_SMALL01_ACTIVE01,
+            AnimationID.HUMAN_SAILING_ALPHA_HELM_SMALL01_ACTIVE01_LOOP,
+            AnimationID.HUMAN_SAILING_ALPHA_HELM_SMALL01_TRIM_SAILS01,
+            AnimationID.HUMAN_SAILING_ALPHA_HELM_SMALL01_TRIM_SAILS01_LOOP,
+            AnimationID.HUMAN_SAILING_ALPHA_HELM_SMALL01_TRIM_SAILS02,
+            AnimationID.HUMAN_SAILING_CANNON01_SMALL01_ENGAGE01,
+            AnimationID.HUMAN_SAILING_CANNON01_SMALL01_IDLE01,
+            AnimationID.HUMAN_SAILING_HELM_3X8_ACTIVE01,
+            AnimationID.HUMAN_SAILING_HELM_3X8_ACTIVE01_LOOP,
+            AnimationID.HUMAN_SAILING_HELM_3X8_TRIM_SAILS01,
+            AnimationID.HUMAN_SAILING_HELM_3X8_TRIM_SAILS01_LOOP,
+            AnimationID.HUMAN_SAILING_HELM_3X8_TRIM_SAILS02);
 
     private NonAttackAnimations() {
     }

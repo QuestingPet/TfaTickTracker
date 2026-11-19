@@ -92,11 +92,12 @@ final class TickLossSummary {
     }
 
     /**
-     * Animations this build has never heard of, and what to do about them.
+     * Animations counted as attacks that have never once dealt damage.
      * <p>
-     * The safety net under {@link AttackAnimations}. Deciding attacks from an allowlist means an animation
-     * nobody has listed registers no attack, which inflates the loss for that room -- so the ids that were
-     * not understood are printed, and the number above them stops being a mystery.
+     * The safety net under the denylist. An animation nobody has listed counts as an attack, which re-seeds
+     * the cooldown and makes the room read BETTER than it was -- and a flattering number is one nobody ever
+     * reports. {@link UnknownAnimations} watches for one that keeps happening and never produces damage,
+     * and this is where it says so.
      * <p>
      * Last in the overlay, on purpose. Everything above it is fixed height so nothing shifts under your eyes
      * mid-fight; this appears only when something is actually wrong, and at the bottom it has nothing below
@@ -115,7 +116,7 @@ final class TickLossSummary {
             if (list.length() > 0) list.append(", ");
             list.append(id);
         }
-        rows.add(new Row("Not counted as attacks", list.toString(), Tone.QUIET));
+        rows.add(new Row("Counted, never hit", list.toString(), Tone.QUIET));
     }
 
     /**

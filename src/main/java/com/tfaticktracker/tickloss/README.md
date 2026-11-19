@@ -646,52 +646,59 @@ Modelling it moved 707 attacks at Ocellus P3 out of "early, cause unknown" and i
 went from 518 early to 56 and `SCYTHE_OF_VITUR_ATTACK` from 354 to 109. The loss those misses represent now
 shows up instead of vanishing into an unexplained reset.
 
-## Attacks come from an allowlist, and an unknown animation says so
+## The denylist decides, and a gap in it has to announce itself
 
-Until the audit of 11-18 November this was the other way round: `NonAttackAnimations` was the decision, and
-anything not on it counted as an attack. That fails in the direction nobody notices. A missing entry let some
-unrelated animation re-seed the attack cooldown, which **hides** loss, so the number came out flattering and
-silent. An allowlist fails the other way -- an unlisted weapon registers no attacks and its room reads as
-enormous loss -- which gets reported within one raid. A loud wrong answer is worth more than a quiet one,
-because only the loud one gets fixed.
+`NonAttackAnimations` decides: an animation nobody has listed counts as an attack. That default is right far
+more often than not, and it survives the two things that matter most -- a weapon nobody has listed, and an
+attack whose animation was overridden by something else on the same tick.
 
-The decision is now three-way:
+This was briefly flipped to an allowlist and flipped back, which is worth recording rather than quietly
+undoing. The argument for the allowlist was that its errors are loud; the argument against it is the data.
+Over the 44 audited raids the denylist made **no measurement errors at all**, while an allowlist would have
+thrown away 226 Crimson Kisten attacks. And it turned out attacktimer does not use its own attack list as a
+detector either -- it decides from interaction, vetoed by a blocklist, and uses the animation only for the
+combat skill and speed, falling back to the weapon's item stats when it has never seen one. An incomplete
+list costs it nothing, which is why an incomplete list looked safer than it was.
+
+So the classification is still three-way, but only the first two decide:
 
 | | meaning | effect |
 |---|---|---|
-| in `AttackAnimations` | a known attack | counts, re-seeds the cooldown |
 | in `NonAttackAnimations` | a known non-attack | does not count, does not re-seed |
-| in neither | **we do not know** | does not count, and the id is reported if it ever hit anything |
+| in `AttackAnimations` | a known attack | counts, re-seeds the cooldown |
+| in neither | counted on the default alone | counts, re-seeds, **and is watched** |
 
-That third row is what makes the allowlist safe to use. The ids are held on the segment
-(`SegmentStats.getUnrecognisedAnimations`), printed at the bottom of the overlay and in the side panel, so a
-gap in the list arrives with the number it moved instead of quietly changing it.
+`AttackAnimations` changes no measurement. Its only job is to separate a confident attack from a guess, so
+that the third row is a small set worth watching.
 
-### Reporting is gated on having dealt damage
+### What sets off a report
 
-Not every unrecognised animation is interesting. A boss mechanic that animates the player -- a knockback, a
-stun, being dragged somewhere -- is unrecognised too, and reporting all of them would turn the signal into
-noise inside one raid.
+The denylist's failure mode is silent and flattering: something that merely animates you mid-fight -- an
+alch, a vengeance, a boss mechanic -- counts as an attack, re-seeds your cooldown and **hides** loss. Nobody
+reports a number that is too kind, so it has to report itself.
 
-What separates a weapon from a mechanic is whether the animation ever coincided with damage **we** dealt,
-which is what hitpoints experience means: every combat attack that connects grants it, and in a raid nothing
-else does (thralls deal damage and grant none). So `UnknownAnimations` holds a candidate for
-`WINDOW_TICKS` and reports it only if hitpoints experience turns up in that window.
+What gives it away is damage. Every attack that connects grants hitpoints experience, on the tick of the
+attack, and in a raid nothing else does -- thralls deal damage and grant none. So `UnknownAnimations` keeps
+a tally per animation, and the trigger is:
 
-One tick. Experience lands on the tick of the attack, not when the hitsplat reaches the NPC, with a tick of
-slack for jitter. Hitsplats were considered as the signal instead and rejected: they are delayed by travel
-time, they are not guaranteed in every case, and with attacks in flight they can arrive out of order. For
-scale, our own hitsplat lands anywhere from +0 to +4 after a bow shot across the 44 raids -- that spread is
-what the experience signal avoids.
+> counted as an attack **3 times**, across the raid, and **never once** followed by hitpoints experience
+> within 1 tick -- reported when the next room closes, once per raid.
 
-**It cannot be the detector**, which is exactly why only the report uses it. A miss or a zero grants no
-experience, and a cooldown must still be re-seeded on a miss; a detector built on experience would ignore
-every attack that failed to connect, which at a raid boss is a great many. As a hint about a weapon nobody
-has listed it is safe: use it enough times and one of them lands.
+Each clause earns its place:
 
-The replay has no experience in it -- `EventLogger` records no xp drops -- so a fixture never reports an
-unknown. That is acceptable precisely because this gates the report and not the measurement, and it is why
-`FixtureReplayTest` was unaffected by the whole change.
+- **3 starts.** One attack missing says nothing and two say very little. Real weapons miss.
+- **Never once.** A single hit settles it for good: it is an attack, and its later misses say nothing new.
+  This is what keeps an unlisted weapon out of the report while it is being counted correctly.
+- **Across the raid.** One alch per room would never reach three inside one room.
+- **Within 1 tick.** Experience lands on the tick of the attack, not when the hitsplat reaches the NPC, with
+  a tick of slack for jitter. Hitsplats were considered as the signal and rejected: delayed by travel time,
+  not guaranteed in every case, and with attacks in flight they can arrive out of order.
+- **When the room closes.** Mid-fight it would be noise, and the numbers it bears on are the room's.
+- **Once per raid.** Repeating it every room would make the overlay noisier the longer the problem went
+  unfixed, which is precisely backwards.
+
+It reports and never decides. An animation that trips this is still counted as an attack; all that happens
+is a line naming the id, in the overlay and in the side panel.
 
 ### What the audit found
 
@@ -727,8 +734,10 @@ Three things worth keeping:
 
 1. **Zero disagreements.** Nothing this project calls a non-attack is called an attack by attacktimer, and 24
    entries are marked non-attack by both. Two lists built from different sources, no contradiction.
-2. **The Kisten is why the list could not just be copied.** attacktimer's data has its block but neither of
-   its attacks, and it appears in 9 of the 44 raids. Both ids are added here, marked as such.
+2. **The Kisten is why an allowlist would have been a disaster.** attacktimer's data has its block but
+   neither of its attacks, and it appears in 9 of the 44 raids with 226 attack starts. Under a denylist it
+   was always counted correctly; under an allowlist every one of those would have been discarded. Both ids
+   are in `AttackAnimations` now, so it is a confident attack rather than a watched guess.
 3. **`HUMAN_TFA_SMALL_CHEST_OPEN` cost nothing.** It is the loot room, which is not a fight room, so no
    segment was ever open while it played. It is kept as the clearest example that the third category is
    real: animations that are neither an attack nor a block do occur with an NPC targeted, and a denylist
@@ -741,13 +750,25 @@ and the like -- people bought the weapons and checked.
 **Worth knowing what that data is to attacktimer: not a detector.** attacktimer decides an attack happened
 from the player interacting with a target, vetoed by a *blocklist*, and separately uses `AnimationData` for
 the combat skill and speed, falling back to the weapon's own item stats when it has never seen the
-animation. That is why a Kisten user still gets a correct 4 over their head there. Its list being incomplete
-costs it nothing; ours being incomplete would cost a whole room, which is the entire reason the unrecognised
-case is reported rather than swallowed. The sailing entry was dropped on the way across: it cannot happen in
-a raid.
+animation. That is why a Kisten user still gets a correct 4 over their head there, and why a list that is
+incomplete looked safer to borrow than it was. The sailing entry was dropped on the way across: it cannot
+happen in a raid.
 
-Its xp-drop handling is the same idea as the gate below, arrived at independently -- `onStatChanged` and
-`onFakeXpDrop` both re-run its attack logic.
+Its `NON_ATTACK` entries were worth far more than its attacks. 62 of them had no equivalent here -- high and
+low alchemy, bones to bananas, vengeance, shadow veil, teleports, pickpocketing, fletching, traps and a pile
+of blocks and defends -- and every one of those is something that can animate you mid-fight and would
+otherwise have re-seeded your cooldown. They are all in `NonAttackAnimations` now. That is the single
+biggest correctness win of the whole audit, and it came from the half of their data nobody would think to
+copy.
+
+`HUMAN_SPELLCAST_DEMONBANE` moved the other way, from attack to non-attack. It is Greater Corruption, which
+is a buff in the same family as a thrall, and the id is shared with the Demonbane spells, which are
+attacks. One animation, two meanings. It sits on the non-attack side because this plugin only measures
+inside TFA, where the cast being made is the corruption; attacktimer has the same collision and says so in
+its own comment.
+
+Its xp-drop handling is the same idea as the report trigger above, arrived at independently --
+`onStatChanged` and `onFakeXpDrop` both re-run its attack logic.
 
 ### Finding a gap in either list
 

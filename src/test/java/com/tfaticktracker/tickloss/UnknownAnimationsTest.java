@@ -2,130 +2,152 @@ package com.tfaticktracker.tickloss;
 
 import java.util.List;
 
-import com.tfaticktracker.RaidRoom;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Which unrecognised animations are worth telling somebody about.
+ * Which animations we counted as attacks without really knowing, and which of those are worth mentioning.
  * <p>
- * The allowlist is only safe because a gap in it is visible, and this is what decides whether a gap is
- * shown. Too eager and every boss mechanic that animates the player becomes a report; too shy and a weapon
- * nobody has listed goes on quietly inflating a room's loss. Both failures are silent in a raid, so they
- * are pinned here instead.
+ * The denylist decides, and its default is "attack". That default is usually right and is silent when it is
+ * not: a thing that merely animates you mid-fight re-seeds your cooldown and HIDES loss, so the number comes
+ * out flattering and nobody reports it. This is the only thing standing between that and shipping, so what
+ * does and does not set it off is pinned here rather than left to a raid.
  */
 public class UnknownAnimationsTest {
 
-    private static SegmentStats segment() {
-        return new SegmentStats(RaidRoom.BORK, 0, null, 0);
-    }
+    private static final int ALCH = 713;
 
-    /** The case it exists for: an animation nobody listed, which then landed a hit. */
+    /** Counted as an attack again and again, never once dealt damage. The case it exists for. */
     @Test
-    public void reportsAnAnimationThatWentOnToDealDamage() {
+    public void reportsAnAnimationThatNeverDealsDamage() {
         final UnknownAnimations unknown = new UnknownAnimations();
-        final SegmentStats room = segment();
+        for (int i = 0; i < UnknownAnimations.STARTS_BEFORE_REPORTING; i++) {
+            unknown.countedAsAttack(ALCH, 100 + i * 10);
+        }
 
-        unknown.seen(14253, 100, room);
-        final List<UnknownAnimations.Entry> reported = unknown.takeBackedByDamage(100);
-
-        assertEquals(1, reported.size());
-        assertEquals(14253, reported.get(0).animation);
-        assertEquals(room, reported.get(0).segment);
+        assertEquals(java.util.Collections.singletonList(ALCH), unknown.settle());
     }
 
     /**
-     * Damage is allowed to arrive a few ticks late, because a projectile has to get there.
+     * One miss says nothing, and two say very little.
      * <p>
-     * Melee resolves on the tick itself; a bow or a cast does not. Charging the animation only for
-     * same-tick damage would report melee weapons and no others.
+     * Real weapons miss. Reporting the first time one did would put a line on the overlay in every raid and
+     * teach everybody to ignore it.
      */
     @Test
-    public void allowsForTheTimeAProjectileTakes() {
+    public void saysNothingUntilItHasHappenedEnoughTimes() {
         final UnknownAnimations unknown = new UnknownAnimations();
-        unknown.seen(14253, 100, segment());
+        for (int i = 0; i < UnknownAnimations.STARTS_BEFORE_REPORTING - 1; i++) {
+            unknown.countedAsAttack(ALCH, 100 + i * 10);
+        }
 
-        assertEquals(1, unknown.takeBackedByDamage(100 + UnknownAnimations.WINDOW_TICKS).size());
+        assertTrue(unknown.settle().isEmpty());
     }
 
     /**
-     * Damage long afterwards says nothing about an animation, and the animation is dropped.
+     * Damage once is enough for good: it is an attack, and its later misses say nothing new.
      * <p>
-     * Otherwise one knockback early in a fight would be reported by the first hit anybody landed for the
-     * rest of the room.
+     * This is what keeps a weapon nobody has listed out of the report. It is being counted correctly, which
+     * is the denylist default working rather than failing.
      */
     @Test
-    public void forgetsAnAnimationNothingEverCameOf() {
+    public void staysQuietAboutAnythingThatHasEverHit() {
         final UnknownAnimations unknown = new UnknownAnimations();
-        unknown.seen(99999, 100, segment());
 
-        assertTrue("too late to be this animation's doing",
-                unknown.takeBackedByDamage(100 + UnknownAnimations.WINDOW_TICKS + 1).isEmpty());
-        assertTrue("and it is not kept around to be reported by the next hit",
-                unknown.takeBackedByDamage(103).isEmpty());
+        unknown.countedAsAttack(14253, 100);
+        unknown.damageDealt(100);
+        for (int i = 0; i < 10; i++) unknown.countedAsAttack(14253, 110 + i * 10);
+
+        assertTrue(unknown.settle().isEmpty());
     }
 
-    /** Reported once and then let go, so a long fight does not repeat it on every hit. */
+    /** Experience lands on the attack tick, with a tick of slack and no more. */
     @Test
-    public void reportsACandidateOnceAndThenForgetsIt() {
-        final UnknownAnimations unknown = new UnknownAnimations();
-        unknown.seen(99999, 100, segment());
+    public void countsDamageOnTheAttackTickOrOneAfter() {
+        final UnknownAnimations onTime = new UnknownAnimations();
+        onTime.countedAsAttack(14253, 100);
+        onTime.damageDealt(100 + UnknownAnimations.WINDOW_TICKS);
+        for (int i = 0; i < 5; i++) onTime.countedAsAttack(14253, 200 + i * 10);
+        assertTrue("backed on the last allowed tick", onTime.settle().isEmpty());
 
-        assertEquals(1, unknown.takeBackedByDamage(101).size());
-        assertTrue("the next hit does not report it all over again",
-                unknown.takeBackedByDamage(102).isEmpty());
+        final UnknownAnimations tooLate = new UnknownAnimations();
+        tooLate.countedAsAttack(ALCH, 100);
+        tooLate.damageDealt(100 + UnknownAnimations.WINDOW_TICKS + 1);
+        for (int i = 0; i < 5; i++) tooLate.countedAsAttack(ALCH, 200 + i * 10);
+        assertEquals("somebody else's hit, far too late to be this animation's",
+                1, tooLate.settle().size());
     }
 
-    /** An animation lasting several ticks is one candidate, not one per tick. */
-    @Test
-    public void countsAnAnimationOncePerRoom() {
-        final UnknownAnimations unknown = new UnknownAnimations();
-        final SegmentStats room = segment();
-
-        unknown.seen(14253, 100, room);
-        unknown.seen(14253, 101, room);
-        unknown.seen(14253, 102, room);
-
-        assertEquals("one candidate, and still live on its last tick",
-                1, unknown.takeBackedByDamage(102).size());
-    }
-
-    /** The same animation in a later room is worth reporting again, against that room. */
-    @Test
-    public void treatsEachRoomSeparately() {
-        final UnknownAnimations unknown = new UnknownAnimations();
-        final SegmentStats first = segment();
-        final SegmentStats second = segment();
-
-        unknown.seen(14253, 100, first);
-        unknown.seen(14253, 101, second);
-
-        assertEquals(2, unknown.takeBackedByDamage(101).size());
-    }
-
-    /**
-     * A flood of unknown animations cannot grow the list without bound.
-     * <p>
-     * Nothing normal produces this. A bug in the lists, or a boss that animates the player every tick,
-     * would -- and the cost of believing it is memory that only grows.
-     */
-    @Test
-    public void holdsOnlyAHandfulAtATime() {
-        final UnknownAnimations unknown = new UnknownAnimations();
-        final SegmentStats room = segment();
-        for (int i = 0; i < 500; i++) unknown.seen(90000 + i, 100, room);
-
-        assertTrue("bounded well above anything real", unknown.takeBackedByDamage(101).size() <= 16);
-    }
-
-    /** Nothing is reported before it happened, which a tick counter reset would otherwise cause. */
+    /** Damage before the animation is somebody else's, or a previous attack of ours landing. */
     @Test
     public void ignoresDamageFromBeforeTheAnimation() {
         final UnknownAnimations unknown = new UnknownAnimations();
-        unknown.seen(14253, 100, segment());
+        unknown.countedAsAttack(ALCH, 100);
+        unknown.damageDealt(99);
+        for (int i = 0; i < 5; i++) unknown.countedAsAttack(ALCH, 200 + i * 10);
 
-        assertTrue(unknown.takeBackedByDamage(99).isEmpty());
+        assertEquals(1, unknown.settle().size());
+    }
+
+    /**
+     * Said once per raid, not once per room.
+     * <p>
+     * Repeating it every room would make the overlay noisier the longer the problem went unfixed, which is
+     * precisely backwards.
+     */
+    @Test
+    public void mentionsEachAnimationOnlyOnce() {
+        final UnknownAnimations unknown = new UnknownAnimations();
+        for (int i = 0; i < 10; i++) unknown.countedAsAttack(ALCH, 100 + i * 10);
+
+        assertEquals(1, unknown.settle().size());
+        assertTrue("the next room does not say it again", unknown.settle().isEmpty());
+    }
+
+    /**
+     * Tallies run across the raid, because one alch a room would never reach the threshold inside one.
+     * <p>
+     * {@code settle} is called as each room closes, so this is what makes a slow drip add up at all.
+     */
+    @Test
+    public void addsUpAcrossRoomsRatherThanWithinOne() {
+        final UnknownAnimations unknown = new UnknownAnimations();
+
+        unknown.countedAsAttack(ALCH, 100);
+        assertTrue(unknown.settle().isEmpty());
+        unknown.countedAsAttack(ALCH, 500);
+        assertTrue(unknown.settle().isEmpty());
+        unknown.countedAsAttack(ALCH, 900);
+
+        assertEquals("the third room is where it adds up", 1, unknown.settle().size());
+    }
+
+    /** A flood of unknown animations cannot grow the map without bound. */
+    @Test
+    public void watchesOnlyAHandfulAtATime() {
+        final UnknownAnimations unknown = new UnknownAnimations();
+        for (int i = 0; i < 500; i++) {
+            for (int n = 0; n < UnknownAnimations.STARTS_BEFORE_REPORTING; n++) {
+                unknown.countedAsAttack(90000 + i, 100 + n);
+            }
+        }
+
+        assertTrue("bounded well above anything real", unknown.settle().size() <= 16);
+    }
+
+    /** A raid ending forgets everything, so the next one starts from nothing. */
+    @Test
+    public void startsCleanEachRaid() {
+        final UnknownAnimations unknown = new UnknownAnimations();
+        for (int i = 0; i < UnknownAnimations.STARTS_BEFORE_REPORTING; i++) {
+            unknown.countedAsAttack(ALCH, 100 + i);
+        }
+
+        unknown.reset();
+
+        assertEquals(0, unknown.startsOf(ALCH));
+        assertTrue(unknown.settle().isEmpty());
     }
 }

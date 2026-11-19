@@ -33,30 +33,27 @@ import net.runelite.api.gameval.AnimationID;
 import java.util.Set;
 
 /**
- * Animations that ARE an attack. The allowlist, and the thing that decides.
+ * Animations known to BE an attack. A label, not the decision.
  * <p>
- * This used to be a denylist: anything not known to be a block or a mouthful counted as an attack. That
- * fails in the direction nobody notices. A missing entry made some unrelated animation re-seed the attack
- * cooldown, which HIDES loss, so the number came out flattering and silent. An allowlist fails the other
- * way: a weapon nobody has listed registers no attacks, the room reads as enormous loss, and it gets
- * reported within one raid. A loud wrong answer is worth more than a quiet one, because only the loud one
- * gets fixed.
+ * {@link NonAttackAnimations} decides, and its default is that an animation nobody has listed is an attack.
+ * This list exists so that a confident attack can be told from a guess: an animation in neither file is one
+ * we are counting on that default alone, and {@link UnknownAnimations} watches those for signs the default
+ * was wrong. Nothing here changes a measurement, which is exactly why it is safe to grow or trim.
  * <p>
- * <b>The third case is the point.</b> An animation in neither this list nor {@link NonAttackAnimations} is
- * not guessed at in either direction. It is not an attack, and it is RECORDED against the room and shown
- * next to the number it affected, so a gap in this file announces itself instead of quietly moving a
- * figure. See {@code SegmentStats#getUnrecognisedAnimations}.
+ * It was briefly the decision, as an allowlist, and that was a mistake worth recording. An allowlist throws
+ * away two things a denylist handles for free: a weapon nobody has listed, and an attack whose animation was
+ * overridden by something else that tick. Over the 44 audited raids the denylist made no measurement errors
+ * at all, while an allowlist would have discarded 226 Crimson Kisten attacks.
+ * <p>
+ * It also turned out that attacktimer, which this list comes from, does not use its copy as a detector
+ * either. It decides an attack happened from the player interacting with a target, vetoed by a BLOCKLIST,
+ * and uses these entries for the combat skill and the speed, falling back to the weapon's own item stats
+ * when it has never seen the animation. Its list being incomplete costs it nothing, which is why an
+ * incomplete list looked safer than it was.
  * <p>
  * <b>Why these ids.</b> Audited across 44 recorded raids from 11-18 November, every animation the local
  * player showed while targeting an NPC in the raid: 22 distinct ones, and not one of them is called a
- * non-attack by us and an attack by attacktimer. Three were in neither list: the two Kisten attacks below,
- * and HUMAN_TFA_SMALL_CHEST_OPEN, which is the loot room and never reaches a fight segment at all.
- * <p>
- * The 174 ids taken from attacktimer are its ATTACK entries, minus its one sailing animation. Worth knowing what that data is to it: not a
- * detector. attacktimer decides an attack happened from the player interacting with a target, vetoed by a
- * blocklist, and uses these entries for the combat skill and speed, falling back to the weapon's own stats
- * when it has never seen the animation. So its list being incomplete does not break it, and ours being
- * incomplete would -- which is why the unrecognised case is reported rather than swallowed.
+ * non-attack by us and an attack by attacktimer.
  */
 final class AttackAnimations {
 
@@ -224,7 +221,6 @@ final class AttackAnimations {
             AnimationID.HUMAN_EYE_OF_AYAK_NORMAL,
             AnimationID.HUMAN_EYE_OF_AYAK_SPECIAL,
             AnimationID.HUMAN_SPECIAL_ACCURSED,
-            AnimationID.HUMAN_SPELLCAST_DEMONBANE,
             AnimationID.HUMAN_SPELLCAST_GRASP,
             AnimationID.NIGHTMARE_STAFF_SPECIAL,
             AnimationID.POG_WARPED_SCEPTRE_ATTACK,

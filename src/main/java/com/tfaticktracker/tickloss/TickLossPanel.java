@@ -189,11 +189,10 @@ public class TickLossPanel extends PluginPanel {
     }
 
     /**
-     * Says so when a number above it was measured with an animation we did not understand.
+     * Says so when something was counted as an attack that probably was not one.
      * <p>
-     * Attacks are decided from an allowlist, so an animation nobody has listed registers no attack and the
-     * room it happened in reads high. That is the deliberate trade -- a loud wrong answer rather than a
-     * quiet one -- and this is the half that makes it loud.
+     * An animation nobody has listed counts as an attack, so a gap in the denylist re-seeds the cooldown and
+     * makes a room read better than it was. Nobody reports a flattering number, so it has to say so itself.
      */
     private void addUnrecognisedNote(List<SegmentStats> mine) {
         final Set<Integer> ids = new LinkedHashSet<>();
@@ -206,8 +205,8 @@ public class TickLossPanel extends PluginPanel {
             if (list.length() > 0) list.append(", ");
             list.append(id);
         }
-        cards.add(message("Unrecognised animations: " + list + ". These were not counted as attacks, so "
-                + "those rooms may read as more loss than you had. Worth reporting."));
+        cards.add(message("Unrecognised animations: " + list + ". These were counted as attacks but never "
+                + "dealt damage, so those rooms may read as less loss than you had. Worth reporting."));
     }
 
     /** The by-raider / by-room switch, as two halves of one control. */

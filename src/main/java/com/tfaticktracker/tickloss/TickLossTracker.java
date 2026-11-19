@@ -242,12 +242,14 @@ public class TickLossTracker {
 
         final boolean counting = fightWindow.isCounting();
         final boolean attacking = isAttacking();
+        final boolean started = attackStarted();
+        if (attacking && started) watchIfUnrecognised();
 
         final AttackTimeline.Result result = timeline.onTick(new AttackTimeline.Input()
                 .tick(tick)
                 .counting(counting)
                 .attacking(attacking)
-                .attackStarted(attackStarted())
+                .attackStarted(started)
                 .weaponSpeed(currentSpeed)
                 .eatDelay(eatTracker.takeUnattributedDelay())
                 .graceOnOpen(RaidNpcs.hasEntryGrace(raidState.getCurrentRoom())
@@ -337,6 +339,11 @@ public class TickLossTracker {
         if (current == null) return;
 
         current.close(client.getTickCount());
+        for (Integer animation : unknownAnimations.settle()) {
+            current.noteUnrecognisedAnimation(animation);
+            log.debug("Tick loss: animation {} was counted as an attack {} times and never once dealt "
+                    + "damage, so it may not be an attack", animation, unknownAnimations.startsOf(animation));
+        }
         if (current.getTicksCounting() > 0) {
             log.debug("Tick loss: {} -> {} counted ticks, {} lost ({} to eating), {} attacks",
                     current.getLabel(), current.getTicksCounting(), current.getLost(),
@@ -484,16 +491,11 @@ public class TickLossTracker {
         final int animation = local.getAnimation();
         if (animation == -1) return false;
 
-        if (AttackAnimations.isAttack(animation)) return true;
-
-        // Neither a known attack nor a known non-attack. It does not count as an attack, and it is held
-        // aside until there is some reason to think it might have been one. See UnknownAnimations.
-        if (current != null && AttackAnimations.isUnrecognised(animation)) {
-            log.debug("Tick loss: unrecognised animation {} while fighting, not counted as an attack",
-                    animation);
-            unknownAnimations.seen(animation, client.getTickCount(), current);
-        }
-        return false;
+        // The denylist decides, so an animation nobody has listed counts as an attack. That default
+        // survives a weapon nobody has listed and an attack whose animation was overridden by something
+        // else, both of which an allowlist gets badly wrong. What it does not survive is something that
+        // merely animates you mid-fight, and UnknownAnimations is what makes that case speak up.
+        return !NonAttackAnimations.isNonAttack(animation);
     }
 
     /** Animations neither list knows, waiting to see whether any of them ever hit something. */
@@ -502,32 +504,38 @@ public class TickLossTracker {
     private int hitpointsXp = -1;
 
     /**
-     * Damage we dealt. Anything unrecognised just before it becomes a candidate worth reporting.
+     * An animation in neither list, which we have just counted as an attack. Watched, not changed.
+     * <p>
+     * See {@link UnknownAnimations}: the count is only ever used to decide whether to mention it on the way
+     * out of the room, never to decide whether it was an attack.
+     */
+    private void watchIfUnrecognised() {
+        final Player local = client.getLocalPlayer();
+        final int animation = local == null ? -1 : local.getAnimation();
+        if (!AttackAnimations.isUnrecognised(animation)) return;
+
+        unknownAnimations.countedAsAttack(animation, client.getTickCount());
+        log.debug("Tick loss: animation {} is in neither list and was counted as an attack", animation);
+    }
+
+    /**
+     * Damage we dealt, which is what tells an attack from something that merely animates you.
      * <p>
      * Both events are needed: {@link StatChanged} carries the ordinary drop, and {@link FakeXpDrop} is what
-     * arrives instead once the skill is at maximum experience, where the total stops moving. See
-     * {@link UnknownAnimations} for why damage is the test and why it is only the report that uses it.
+     * arrives instead once the skill is at maximum experience, where the total stops moving.
      */
     @Subscribe
     public void onStatChanged(StatChanged e) {
         if (e.getSkill() != Skill.HITPOINTS) return;
 
         final int xp = e.getXp();
-        if (hitpointsXp >= 0 && xp > hitpointsXp) reportUnknownsBackedByDamage();
+        if (hitpointsXp >= 0 && xp > hitpointsXp) unknownAnimations.damageDealt(client.getTickCount());
         hitpointsXp = xp;
     }
 
     @Subscribe
     public void onFakeXpDrop(FakeXpDrop e) {
-        if (e.getSkill() == Skill.HITPOINTS) reportUnknownsBackedByDamage();
-    }
-
-    private void reportUnknownsBackedByDamage() {
-        for (UnknownAnimations.Entry entry : unknownAnimations.takeBackedByDamage(client.getTickCount())) {
-            entry.segment.noteUnrecognisedAnimation(entry.animation);
-            log.debug("Tick loss: animation {} landed a hit, so it is reported as a possible attack missing "
-                    + "from AttackAnimations", entry.animation);
-        }
+        if (e.getSkill() == Skill.HITPOINTS) unknownAnimations.damageDealt(client.getTickCount());
     }
 
     /**
