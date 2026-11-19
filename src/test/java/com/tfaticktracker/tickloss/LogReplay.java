@@ -32,11 +32,11 @@ import java.util.regex.Pattern;
  *     <li><b>Weapon speed.</b> The log records no equipment, so speed is inferred from the attack animation
  *     via {@link #SPEED_BY_ANIMATION}. Good enough for the weapons actually used; the real speed logic lives
  *     in {@link WeaponSpeeds} and is not exercised here.</li>
- *     <li><b>Unrecognised animations.</b> The replay never reports one. Deciding whether an unknown
- *     animation was worth mentioning needs hitpoints experience, and {@code EventLogger} records no xp
- *     drops, so the candidate never matures. That costs the fixtures nothing: the gate is on the REPORT
- *     and not on the measurement, which is why switching from a denylist to an allowlist left every
- *     committed fixture number untouched.</li>
+ *     <li><b>Unrecognised animations.</b> The replay never reports one. Deciding whether an animation
+ *     counted as an attack was really one needs hitpoints experience, and the nine committed fixtures were
+ *     cut before {@code EventLogger} recorded xp drops, so no candidate ever matures in them. That costs
+ *     the fixtures nothing, because the rule reports and never decides -- which is also why the whole
+ *     allowlist experiment left every committed number untouched in both directions.</li>
  *     <li><b>Eating.</b> {@code EventLogger} records no menu clicks or inventory changes, so a confirmed eat
  *     cannot be reconstructed. Eat attribution is covered by scenarios in {@code AttackTimelineTest} instead.</li>
  * </ul>
@@ -500,7 +500,9 @@ public final class LogReplay {
 
             // "Attackable" is a composition lookup, so an older log can only say the target is an NPC.
             final boolean hasTarget = loggedTargetAttackable != null ? loggedTargetAttackable : targetIsNpc;
-            final boolean attacking = hasTarget && AttackAnimations.isAttack(myAnim);
+            // Same rule as the live path: the denylist decides, and an animation nobody has listed
+            // counts as an attack.
+            final boolean attacking = hasTarget && myAnim != -1 && !NonAttackAnimations.isNonAttack(myAnim);
             // Frames are what separate a re-attack from an animation still playing. Logs written before frame
             // logging have none, so fall back to the animation changing, which misses repeats sharing an id.
             // Frames do not advance one per tick, so a repeat can show the same frame twice -- two undead
