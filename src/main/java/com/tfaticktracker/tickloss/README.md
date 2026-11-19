@@ -271,79 +271,6 @@ measuring something other than the plugin. There is now one implementation.
    the counter was usually at -1 -- but could not explain a karambwan eaten two ticks past ready costing
    nothing at all.
 
-### Two ways to check a change
-
-**`AttackTimelineTest`** -- scenarios, written in ticks. Fast, and the place for anything about the cooldown:
-
-```java
-new Sim().speed(5)
-        .attack(0)          // 954, bow
-        .attack(6)          // 960, first cast
-        .attack(8)          // 962, second cast, inside the first's cooldown
-        .attack(13)         // 967, bow
-        .assertLost(1);
-```
-
-A failing assertion prints the whole tick-by-tick run, so the scenario diagnoses itself.
-
-**`FixtureReplayTest`** -- nine slices of real raids, checked into
-`src/test/resources/tickloss-fixtures/` and replayed through the real `FightWindowState` and the real
-`AttackTimeline`. It holds each one's exact numbers plus the invariants, so a rule change that shifts a past
-raid fails the build and has to be looked at. It needs no `debug-logs/` and runs in about a second:
-
-```
-./gradlew test --tests '*FixtureReplayTest*' -i
-```
-
-A log carries what the replay needs, because `EventLogger` is ours and was taught to record it. Each TICK
-line now has the animation frame, the facts behind `AttackSpeed` (weapon, its aspeed, style, rapid, the two
-casting flags), whether the target is actually attackable, and whether we are in a raid. `MENU` and
-`INVENTORY` lines carry the click and the slot diff that together confirm an eat, which the replay
-reconstructs the same way the plugin does live -- so eat attribution is covered by the fixtures too, in
-bork-dud-shot-and-eat and player-death.
-
-Only *inputs* are logged, never the plugin's conclusions -- a log of what the plugin decided would replay its
-own answers back and prove nothing. The one judgement call is `aspeed` and `targetatk`, which are lookups
-into item stats and NPC composition: game data the client has and a log otherwise cannot, not decisions.
-
-> **If a replay cannot answer something, log the input rather than guess at it.** `EventLogger` is part of
-> this plugin; when the replay was inferring weapon speed from animations, the fix was to record the weapon.
->
-> **When a run shows the wrong figure, write the scenario BEFORE the fix.** Ticks, what happened on each,
-> and the number it should have produced. That is the mechanism that was missing while the same bugs kept
-> coming back.
-
-This replaced a Python reimplementation of the same rules. That copy was wrong three separate times -- it
-counted the whole team's attacks as the player's, it detected attacks from events while the plugin polled
-per tick, and it had no cooldown-reset branch -- so every time it "verified" a fix across sixty logs it was
-measuring something other than the plugin. There is now one implementation.
-
-### The three rules that keep being got wrong
-
-1. **An attack must have STARTED.** An attack animation lingers after the shot that produced it, and
-   `AnimationChanged` does not re-fire when an animation repeats with the same id. So "an attack animation is
-   showing" is true both for a fresh attack and for one two ticks old, and reading it as an attack invents
-   them. `Actor.getAnimationFrame()` settles it: it restarts on a new attack and advances otherwise.
-2. **Attacking early is never loss, and ALWAYS re-seeds the cooldown.** Common with any weapon, not just the
-   raid's own resets. attacktimer does not do this -- while its holdoff is positive it ignores the poll
-   entirely -- so this part is ours and has to stay ours.
-3. **Eating is charged its own delay, less one if you were already off cooldown, capped at what was lost.**
-   Whether the weapon was ready changes the cost, which is not obvious and was measured at the Archive
-   Guardian in `tfa-events-20261114-115313.log`:
-
-   | | weapon ready | ate at | attacked at | the food's share |
-   |---|---|---|---|---|
-   | karambwan, on cooldown | 252 | 251 | 254 | 2, from when the weapon was ready |
-   | karambwan, off cooldown | 312 | 313 | 314 | 1 |
-   | anglerfish, on cooldown | 259 | 258 | 262 | 3, from when the weapon was ready |
-   | anglerfish, off cooldown | 361 | 362 | 364 | 2 |
-
-   Eating off cooldown costs a tick less, because the tick you eat on is one you were going to spend on the
-   attack anyway. Eating while still on cooldown costs the whole delay, because the food's wait does not run
-   during the weapon's -- it starts when that ends. The subtraction is per eat *tick*, so a combo eat is
-   charged as one. The cap is what keeps it honest: eat four ticks into a five tick cooldown and the attack
-   still lands on time, so nothing is charged.
-
 ## How loss is counted
 
 ```
@@ -506,7 +433,6 @@ reached and how long the raid took. It was added to `RaidState` for this and fil
 | `EatTracker` | confirmed eats and their delay |
 | `SegmentStats` | per room/phase counters |
 | `TickLossTracker` | orchestration, `@Subscribe(priority = -2)` so it runs after the detectors |
-| `TickLossOverlay` | debug overlay: state, counters, and the raw inputs behind them |
 
 ## Checking a rule change against raids that already happened
 
@@ -779,5 +705,8 @@ target, never what you did on a given tick -- the same trap as always.
 ## Testing
 
 Only the user can verify any of this in game — per `AGENTS.md`, never automate game input.
-Run `./gradlew run` and enable the plugin. The player-facing overlay is top-left; the developer
-view of the state machine is under **Debug** → `Debug Overlay`, and needs developer mode.
+Run `./gradlew run` and enable the plugin. The overlay is top-left and the panel is in the sidebar.
+
+The event logger and the debug overlay are not on `master`: they were removed for release and live on
+the local `debug` branch, which is `master` plus one "Re-add debug tools" commit. Recording a raid, or
+cutting a new fixture from one, means working there. See `debug-logs/RESTORE-DEBUG-TOOLS.md`.
