@@ -80,15 +80,49 @@ public class UnknownAnimationsTest {
                 1, tooLate.settle().size());
     }
 
+    /**
+     * Experience arriving BEFORE the attack is recorded still counts, because that is the real order.
+     * <p>
+     * StatChanged is processed with the tick's packets and GameTick is posted after them, so on the tick of
+     * an attack the experience lands first. Matching only backwards from the experience compared it against
+     * the PREVIOUS attack -- five ticks earlier for a glaive -- so nothing was ever matched and a weapon
+     * that was hitting got reported anyway. That shipped and was caught in a live raid.
+     */
+    @Test
+    public void matchesExperienceThatArrivesBeforeTheAttackIsRecorded() {
+        final UnknownAnimations unknown = new UnknownAnimations();
+
+        for (int i = 0; i < 10; i++) {
+            final int tick = 100 + i * 5;
+            unknown.damageDealt(tick);
+            unknown.countedAsAttack(10922, tick);
+        }
+
+        assertTrue("it hit every time, in the order the client reports", unknown.settle().isEmpty());
+    }
+
+    /** And the other order too, since one tick of slack means it can land the tick after. */
+    @Test
+    public void matchesExperienceThatArrivesAfterTheAttackIsRecorded() {
+        final UnknownAnimations unknown = new UnknownAnimations();
+
+        for (int i = 0; i < 10; i++) {
+            final int tick = 100 + i * 5;
+            unknown.countedAsAttack(10922, tick);
+            unknown.damageDealt(tick + UnknownAnimations.WINDOW_TICKS);
+        }
+
+        assertTrue(unknown.settle().isEmpty());
+    }
+
     /** Damage before the animation is somebody else's, or a previous attack of ours landing. */
     @Test
-    public void ignoresDamageFromBeforeTheAnimation() {
+    public void ignoresDamageFromLongBeforeTheAnimation() {
         final UnknownAnimations unknown = new UnknownAnimations();
-        unknown.countedAsAttack(ALCH, 100);
-        unknown.damageDealt(99);
+        unknown.damageDealt(90);
         for (int i = 0; i < 5; i++) unknown.countedAsAttack(ALCH, 200 + i * 10);
 
-        assertEquals(1, unknown.settle().size());
+        assertEquals("ten ticks earlier is a different attack", 1, unknown.settle().size());
     }
 
     /**

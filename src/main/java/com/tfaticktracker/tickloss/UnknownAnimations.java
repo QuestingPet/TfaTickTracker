@@ -75,11 +75,14 @@ final class UnknownAnimations {
 
     private final Map<Integer, Candidate> tracked = new LinkedHashMap<>();
     private int reported;
+    /** The last tick we dealt damage on, so an attack recorded AFTER its own xp is still matched. */
+    private int lastDamageTick = Integer.MIN_VALUE;
 
     /** A new raid. Nothing carries over, so a list fixed between raids stops being mentioned. */
     void reset() {
         tracked.clear();
         reported = 0;
+        lastDamageTick = Integer.MIN_VALUE;
     }
 
     /** An animation neither list knows, which we have just counted as an attack. */
@@ -94,6 +97,14 @@ final class UnknownAnimations {
         }
         candidate.starts++;
         candidate.lastStartTick = tick;
+
+        // Matched in BOTH directions, because the two events arrive in the opposite order to the obvious
+        // one: a StatChanged is processed with the rest of the tick's packets, which is BEFORE GameTick,
+        // so on the tick of an attack the experience lands before the attack is recorded. Looking only
+        // backwards from the experience meant a weapon's xp was always compared against the PREVIOUS
+        // attack, five ticks earlier, and no attack was ever matched. That shipped: the uncharged Ralos
+        // glaive was reported in a live raid having hit twice in eight throws.
+        if (within(tick, lastDamageTick)) candidate.backedByDamage++;
     }
 
     /**
@@ -111,10 +122,16 @@ final class UnknownAnimations {
      * stays quiet and one that cries wolf every raid, quiet is the one people keep reading.
      */
     void damageDealt(int tick) {
+        lastDamageTick = tick;
         for (Candidate candidate : tracked.values()) {
-            final int age = tick - candidate.lastStartTick;
-            if (age >= 0 && age <= WINDOW_TICKS) candidate.backedByDamage++;
+            if (within(tick, candidate.lastStartTick)) candidate.backedByDamage++;
         }
+    }
+
+    /** Whether these two ticks are close enough to be the same attack, in either order. */
+    private static boolean within(int later, int earlier) {
+        final int age = later - earlier;
+        return age >= 0 && age <= WINDOW_TICKS;
     }
 
     /**

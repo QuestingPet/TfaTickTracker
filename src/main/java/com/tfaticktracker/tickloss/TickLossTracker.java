@@ -29,7 +29,9 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -168,7 +170,7 @@ public class TickLossTracker {
         resetCandidates = 0;
         attackStart.reset();
         unknownAnimations.reset();
-        hitpointsXp = -1;
+        combatXp.clear();
         retargetedThisTick = false;
         voidExplosionThisTick = false;
         dudShotThisTick = false;
@@ -500,8 +502,18 @@ public class TickLossTracker {
 
     /** Animations neither list knows, waiting to see whether any of them ever hit something. */
     private final UnknownAnimations unknownAnimations = new UnknownAnimations();
-    /** Hitpoints experience as of the last reading, or -1 before the first one. */
-    private int hitpointsXp = -1;
+    /**
+     * Combat experience as of the last reading, per skill, or -1 before the first one.
+     * <p>
+     * Any of them, not hitpoints alone. Hitpoints is the tidy signal -- it tracks damage dealt and nothing
+     * else grants it -- but it does not always arrive: an uncharged Ralos glaive gave ranged experience on
+     * throws that produced no hitpoints drop at all. Every skill here is only ever granted by attacking, so
+     * taking any of them loses nothing and catches the cases hitpoints misses.
+     */
+    private static final Skill[] COMBAT_SKILLS = {
+            Skill.HITPOINTS, Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE, Skill.RANGED, Skill.MAGIC,
+    };
+    private final Map<Skill, Integer> combatXp = new EnumMap<>(Skill.class);
 
     /**
      * An animation in neither list, which we have just counted as an attack. Watched, not changed.
@@ -526,16 +538,22 @@ public class TickLossTracker {
      */
     @Subscribe
     public void onStatChanged(StatChanged e) {
-        if (e.getSkill() != Skill.HITPOINTS) return;
+        if (!isCombat(e.getSkill())) return;
 
-        final int xp = e.getXp();
-        if (hitpointsXp >= 0 && xp > hitpointsXp) unknownAnimations.damageDealt(client.getTickCount());
-        hitpointsXp = xp;
+        final Integer was = combatXp.put(e.getSkill(), e.getXp());
+        if (was != null && e.getXp() > was) unknownAnimations.damageDealt(client.getTickCount());
     }
 
     @Subscribe
     public void onFakeXpDrop(FakeXpDrop e) {
-        if (e.getSkill() == Skill.HITPOINTS) unknownAnimations.damageDealt(client.getTickCount());
+        if (isCombat(e.getSkill())) unknownAnimations.damageDealt(client.getTickCount());
+    }
+
+    private static boolean isCombat(Skill skill) {
+        for (Skill combat : COMBAT_SKILLS) {
+            if (combat == skill) return true;
+        }
+        return false;
     }
 
     /**

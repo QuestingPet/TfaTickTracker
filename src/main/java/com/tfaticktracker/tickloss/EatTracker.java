@@ -166,6 +166,19 @@ public class EatTracker {
         return option != null && option.toLowerCase(java.util.Locale.ROOT).startsWith("eat");
     }
 
+    /**
+     * KNOWN GAP: food that never leaves the inventory is never charged.
+     * <p>
+     * The Guthixian root (item 35026, practice mode only) is infinite -- it stays in the slot, so the
+     * inventory never changes and the confirm below never fires, while the player reports it does cost the
+     * usual 3 ticks. Every root eaten is therefore 3 ticks of loss attributed to nothing.
+     * <p>
+     * Confirming it on the CLICK instead would be wrong: of the three root clicks in debug-logs/ not one
+     * ate anything -- no inventory change, no eat animation, nothing -- so clicks are swallowed often enough
+     * that charging them would invent more than it fixed. The eat animation is the obvious alternative
+     * signal and no recorded root eat has ever produced one to check against, so it is left here as a
+     * written-down gap rather than a guess.
+     */
     @Subscribe
     public void onMenuOptionClicked(MenuOptionClicked e) {
         String option = Text.removeTags(e.getMenuOption()).toLowerCase();

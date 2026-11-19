@@ -142,6 +142,11 @@ final class NonAttackAnimations {
             // NOTE: this is the freeze being free on a corpse, not the spell being free in general.
             // A dodge, reused by Ocellus P3
             AnimationID.HUMAN_YAMA_SHORTJUMP01,
+            // A Dagon'hai mechanic, under a name from somewhere else entirely -- the raid reuses an agility
+            // arena animation. Seen 18 times in debug-logs/, never once with a target, so it has never
+            // reached the attack test; listed anyway, because that is luck rather than design and the next
+            // room like it may not be so tidy.
+            AnimationID.AGILITYARENA_PLAYER_SPIKEDBACK_MERGE,
             // Raid-specific defence animations
             AnimationID.TFA_HUMAN_OBLIGATOR_DEF,
             AnimationID.TFA_HUMAN_OBLIGATOR_DEF_FEMALE,
