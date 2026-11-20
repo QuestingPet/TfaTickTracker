@@ -25,7 +25,8 @@ import java.awt.image.BufferedImage;
 @PluginDescriptor(
         name = "Tfa Tick Tracker",
         internalName = "tfa-tick-tracker",
-        description = "Measures your unused attack ticks, room by room, in The Fractured Archives"
+        description = "Measures your unused attack ticks, room by room, in The Fractured Archives",
+        tags = {"tfa", "fractured", "archives", "tick", "ticks", "tickloss", "efficiency", "raid"}
 )
 public class TfaTickTrackerPlugin extends Plugin {
 
