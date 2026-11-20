@@ -268,7 +268,7 @@ final class TickLossSummary {
         // total disagree with its own list.
         final int lost = RaidRooms.lost(slots);
         final int counted = RaidRooms.counted(slots);
-        final double efficiency = RaidRooms.efficiency(lost, counted);
+        final double efficiency = SegmentStats.efficiency(lost, counted);
 
         blank(rows);
         rows.add(new Row("Whole raid",

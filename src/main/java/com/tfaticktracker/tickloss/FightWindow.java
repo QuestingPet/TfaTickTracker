@@ -213,19 +213,7 @@ public class FightWindow {
      * window deliberately does not depend on it, because losing your target is exactly what tick loss measures.
      */
     public boolean hasAttackableTarget() {
-        final Player local = client.getLocalPlayer();
-        if (local == null) return false;
-
-        final Actor target = local.getInteracting();
-        if (!(target instanceof NPC)) return false;
-
-        final NPCComposition comp = ((NPC) target).getTransformedComposition();
-        if (comp == null) return false;
-        if (!comp.isInteractible()) return false;
-
-        for (String action : comp.getActions()) {
-            if ("Attack".equals(action)) return true;
-        }
-        return false;
+        final NPCComposition comp = RaidNpcs.attackedNpc(client);
+        return comp != null && comp.isInteractible();
     }
 }

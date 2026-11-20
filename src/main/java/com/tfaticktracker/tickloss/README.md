@@ -851,4 +851,4 @@ Run `./gradlew run` and enable the plugin. The overlay is top-left and the panel
 
 The event logger and the debug overlay are not on `master`: they were removed for release and live on
 the local `debug` branch, which is `master` plus one "Re-add debug tools" commit. Recording a raid, or
-cutting a new fixture from one, means working there. See `the recorded raidsRESTORE-DEBUG-TOOLS.md`.
+cutting a new fixture from one, means working there. See the restore note kept beside the logs.

@@ -540,7 +540,7 @@ public class TickLossSummaryTest {
     }
 
     private static SegmentStats segment(RaidRoom room, String phase, int counted, int lost, int eat, int dud) {
-        final SegmentStats s = new SegmentStats(room, 0, phase, 0);
+        final SegmentStats s = new SegmentStats(room, 0, phase);
         for (int i = 0; i < counted; i++) {
             s.tickInRoom();
             s.tickCounting();

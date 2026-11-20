@@ -9,10 +9,8 @@ import com.tfaticktracker.events.RaidFinished;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.NPC;
-import net.runelite.api.NPCComposition;
 import net.runelite.api.Player;
 import net.runelite.api.Skill;
 import net.runelite.api.events.FakeXpDrop;
@@ -328,7 +326,6 @@ public class TickLossTracker {
     private void closeCurrent() {
         if (current == null) return;
 
-        current.close(client.getTickCount());
         for (Integer animation : unknownAnimations.settle()) {
             current.noteUnrecognisedAnimation(animation);
             log.debug("Tick loss: animation {} was counted as an attack {} times and never once dealt "
@@ -378,7 +375,7 @@ public class TickLossTracker {
         // the next one, because starting a new fight is what clears these states.
         if (FightWindowState.endsTheRoom(fightWindow.getState())) return;
 
-        current = new SegmentStats(room, phase, phaseName, client.getTickCount());
+        current = new SegmentStats(room, phase, phaseName);
         segments.add(current);
     }
 
@@ -455,23 +452,10 @@ public class TickLossTracker {
     }
 
     public boolean isAttacking() {
+        if (RaidNpcs.attackedNpc(client) == null) return false;
+
         final Player local = client.getLocalPlayer();
         if (local == null) return false;
-
-        final Actor target = local.getInteracting();
-        if (!(target instanceof NPC)) return false;
-
-        final NPCComposition comp = ((NPC) target).getTransformedComposition();
-        if (comp == null) return false;
-
-        boolean attackable = false;
-        for (String action : comp.getActions()) {
-            if ("Attack".equals(action)) {
-                attackable = true;
-                break;
-            }
-        }
-        if (!attackable) return false;
 
         final int animation = local.getAnimation();
         if (animation == -1) return false;
@@ -556,9 +540,7 @@ public class TickLossTracker {
 
     /** Efficiency across every counted segment of the raid. */
     public double getTotalEfficiency() {
-        final int counted = getTotalCountingTicks();
-        if (counted <= 0) return 1.0d;
-        return Math.max(0.0d, 1.0d - ((double) getTotalLost() / counted));
+        return SegmentStats.efficiency(getTotalLost(), getTotalCountingTicks());
     }
 
     @Subscribe

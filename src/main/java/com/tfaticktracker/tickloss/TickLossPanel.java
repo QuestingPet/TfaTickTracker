@@ -348,7 +348,7 @@ public class TickLossPanel extends PluginPanel {
         head.add(who, BorderLayout.WEST);
 
         final JLabel totals = new JLabel(counted <= 0 ? "--"
-                : lost + "   " + TickLossLabels.percent(efficiency(lost, counted)));
+                : lost + "   " + TickLossLabels.percent(SegmentStats.efficiency(lost, counted)));
         totals.setForeground(counted <= 0 ? MUTED : NUMBER);
         totals.setFont(FontManager.getRunescapeFont());
         totals.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -483,8 +483,4 @@ public class TickLossPanel extends PluginPanel {
         return finished;
     }
 
-    private static double efficiency(int lost, int counted) {
-        if (counted <= 0) return 1.0d;
-        return Math.max(0.0d, 1.0d - ((double) lost / counted));
-    }
 }

@@ -88,7 +88,7 @@ public class RaidRoomsTest {
     }
 
     private static SegmentStats segment(RaidRoom room, String phase) {
-        final SegmentStats s = new SegmentStats(room, 0, phase, 0);
+        final SegmentStats s = new SegmentStats(room, 0, phase);
         s.tickInRoom();
         s.tickCounting();
         return s;

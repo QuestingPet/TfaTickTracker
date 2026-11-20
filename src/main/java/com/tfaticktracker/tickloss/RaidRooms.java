@@ -101,11 +101,6 @@ final class RaidRooms {
         return total;
     }
 
-    static double efficiency(int lost, int counted) {
-        if (counted <= 0) return 1.0d;
-        return Math.max(0.0d, 1.0d - ((double) lost / counted));
-    }
-
     private static SegmentStats latest(List<SegmentStats> finished, RaidRoom room, String phase) {
         SegmentStats found = null;
         for (SegmentStats candidate : finished) {

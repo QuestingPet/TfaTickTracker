@@ -26,8 +26,6 @@ public class SegmentStats {
     /** Phase name from the boss's NPC form, e.g. "P2". Null in rooms that are measured as one segment. */
     @Getter
     private final String phaseName;
-    @Getter
-    private final int startTick;
 
     /** Ticks spent in the room, whether or not we were counting. */
     @Getter
@@ -59,8 +57,6 @@ public class SegmentStats {
     /** Attacks that landed before the cooldown we expected -- a cooldown reset. Never counted as loss. */
     @Getter
     private int earlyAttacks;
-    @Getter
-    private int endTick;
 
     /**
      * Animations seen in this fight that are in neither {@link AttackAnimations} nor
@@ -139,10 +135,6 @@ public class SegmentStats {
         earlyAttacks++;
     }
 
-    void close(int tick) {
-        endTick = tick;
-    }
-
     /**
      * Lost ticks, all of them. Eating is reported alongside in {@link #getLostToEating()} rather than taken
      * off: a tick spent on food is still a tick you did not attack in, so it belongs in the total.
@@ -158,8 +150,19 @@ public class SegmentStats {
      * not attack in. {@link #getLostToEating()} is the breakdown of how much of it was food, not a discount.
      */
     public double getEfficiency() {
-        if (ticksCounting <= 0) return 1.0d;
-        return Math.max(0.0d, 1.0d - ((double) lostTicks / ticksCounting));
+        return efficiency(lostTicks, ticksCounting);
+    }
+
+    /**
+     * The one definition of efficiency, shared by every place that shows one.
+     * <p>
+     * Nothing measured yet reads as 100%, not 0%: a room nobody has fought in has lost nothing. The floor
+     * at zero matters because the raid resets the attack cooldown in places, so a segment can bank more
+     * attacks than its length allows and a naive figure would climb past 100%.
+     */
+    static double efficiency(int lost, int counted) {
+        if (counted <= 0) return 1.0d;
+        return Math.max(0.0d, 1.0d - ((double) lost / counted));
     }
 
     public String getLabel() {

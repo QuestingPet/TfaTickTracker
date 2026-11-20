@@ -89,8 +89,7 @@ public class TickLossParty {
         }
 
         public double getEfficiency() {
-            if (counted <= 0) return 1.0d;
-            return Math.max(0.0d, 1.0d - ((double) lost / counted));
+            return SegmentStats.efficiency(lost, counted);
         }
     }
 
@@ -144,9 +143,7 @@ public class TickLossParty {
         }
 
         public double getEfficiency() {
-            final int counted = getRaidCounted();
-            if (counted <= 0) return 1.0d;
-            return Math.max(0.0d, 1.0d - ((double) getRaidLost() / counted));
+            return SegmentStats.efficiency(getRaidLost(), getRaidCounted());
         }
     }
 

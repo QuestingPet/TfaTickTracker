@@ -3,6 +3,11 @@ package com.tfaticktracker.tickloss;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.tfaticktracker.RaidRoom;
+import net.runelite.api.Player;
+import net.runelite.api.NPCComposition;
+import net.runelite.api.NPC;
+import net.runelite.api.Client;
+import net.runelite.api.Actor;
 import net.runelite.api.gameval.AnimationID;
 import net.runelite.api.gameval.NpcID;
 import net.runelite.api.gameval.SpotanimID;
@@ -230,6 +235,29 @@ final class RaidNpcs {
     static boolean leavesUnattackable(RaidRoom room, int animationId) {
         if (room == null) return false;
         return LEAVES_UNATTACKABLE.getOrDefault(room, Collections.emptySet()).contains(animationId);
+    }
+
+    /**
+     * The NPC we are interacting with, if it is one we could attack, else null.
+     * <p>
+     * "Could attack" means an Attack option on its transformed composition, which is what a boss presents
+     * once it goes live. Shared because the fight window and the attack test both need exactly this and
+     * had grown their own copy of it.
+     */
+    static NPCComposition attackedNpc(Client client) {
+        final Player local = client.getLocalPlayer();
+        if (local == null) return null;
+
+        final Actor target = local.getInteracting();
+        if (!(target instanceof NPC)) return null;
+
+        final NPCComposition comp = ((NPC) target).getTransformedComposition();
+        if (comp == null) return null;
+
+        for (String action : comp.getActions()) {
+            if ("Attack".equals(action)) return comp;
+        }
+        return null;
     }
 
     static boolean hasEntryGrace(RaidRoom room) {
