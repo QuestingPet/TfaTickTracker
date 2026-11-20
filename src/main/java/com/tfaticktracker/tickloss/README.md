@@ -11,11 +11,10 @@ rule looks arbitrary, there is usually a log line in the history that made it so
 Measures the **local player's** unused attack ticks, per raid room and per boss phase. A tick you
 were off cooldown, in a live fight, with something to hit, and did not attack is a tick lost.
 
-It started as a prototype inside
-[Tfa Mistake Tracker](https://github.com/QuestingPet/TfaMistakeTracker), which is where the raid
-plumbing comes from: `RaidState`, `RaidRoom`, the raid events and `EventLogger` were carried over
-wholesale and are not specific to counting ticks. Keeping the prototype's dependency on them
-one-way is what made the move a copy rather than a refactor.
+Everything that decides what a lost tick is lives in this package. It reads the raid plumbing --
+`RaidState`, `RaidRoom` and the raid events -- and nothing reads it back. That boundary is not
+decoration: it is what lets the whole measurement run off a recorded log in the tests, with no
+client anywhere.
 
 ## Why it is local-player-only
 

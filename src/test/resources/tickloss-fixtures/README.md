@@ -1,10 +1,10 @@
 # Tick loss fixtures
 
 Slices of real raids, cut by `LogFixtures` and replayed by `FixtureReplayTest`.
-They exist so the regression net does not depend on `debug-logs/`, which reached
-3.7 GB across 72 raids and cannot be checked in. These 3.6 MB are the authority on
-regressions; they ported from Tfa Mistake Tracker unchanged and still produce
-exactly the same numbers here, which is what proves the move changed nothing.
+They exist so the regression net does not depend on the raw recordings, which
+reached 3.7 GB across 72 raids and cannot be checked in. These 3.6 MB are the
+authority on regressions: change a rule and the exact numbers nine real fights
+produced have to still come out, or the build says which one moved and by how much.
 
 Each file opens with a generated checkpoint -- the room, the health-bar varbits and
 the NPCs that were already alive -- because a raw tick range would be missing all
