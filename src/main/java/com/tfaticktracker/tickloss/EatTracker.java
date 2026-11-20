@@ -156,7 +156,7 @@ public class EatTracker {
      * Food only. <b>Drinking does not delay an attack.</b> Brews, restores, potions and the rest are free,
      * confirmed by the player, who is the only one able to confirm in-game behaviour here. A "Drink" is
      * therefore not tracked at all, and that exclusion is load bearing rather than an oversight: across three
-     * raids in debug-logs/ there are 1079 confirmed drinks against 230 eats, so charging them like food would
+     * recorded raids there are 1079 confirmed drinks against 230 eats, so charging them like food would
      * invent several times more cost than eating has ever accounted for.
      * <p>
      * Shared with {@code LogReplay} so the recorded-log path and the live path cannot drift apart on it. Two
@@ -173,7 +173,7 @@ public class EatTracker {
      * inventory never changes and the confirm below never fires, while the player reports it does cost the
      * usual 3 ticks. Every root eaten is therefore 3 ticks of loss attributed to nothing.
      * <p>
-     * Confirming it on the CLICK instead would be wrong: of the three root clicks in debug-logs/ not one
+     * Confirming it on the CLICK instead would be wrong: of the three root clicks in the recorded raids, not one
      * ate anything -- no inventory change, no eat animation, nothing -- so clicks are swallowed often enough
      * that charging them would invent more than it fixed. The eat animation is the obvious alternative
      * signal and no recorded root eat has ever produced one to check against, so it is left here as a
@@ -222,7 +222,7 @@ public class EatTracker {
             final int tick = client.getTickCount();
 
             // Combo eating sums: a karambwan plus a normal food on the same tick cost 5 delay ticks, not 3.
-            // Measured in debug-logs/tfa-events-20261112-141632.log -- elder maul (6t) attacks at ticks 333 and
+            // Measured in a recorded raid -- elder maul (6t) attacks at ticks 333 and
             // 344 around a combo eat at 336, an 11 tick gap. attacktimer accrues eat delays additively too.
             unattributedDelayTicks += delay;
             if (tick != lastEatTick) {

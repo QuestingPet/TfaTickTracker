@@ -12,13 +12,7 @@ import lombok.Value;
 @Builder
 public class RaidRoomChanged {
 
-    /**
-     * The new RaidRoom
-     */
     RaidRoom newRaidRoom;
 
-    /**
-     * The previous RaidRoom
-     */
     RaidRoom prevRaidRoom;
 }

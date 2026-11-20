@@ -12,7 +12,7 @@ import static org.junit.Assert.assertTrue;
  * <p>
  * Drinking does not delay an attack. That is easy to doubt, because eating plainly does and a potion looks
  * like the same kind of action, so this exists to stop the matcher being "helpfully" widened to cover drinks.
- * Doing so would be expensive as well as wrong: across three raids in debug-logs/ there are 1079 confirmed
+ * Doing so would be expensive as well as wrong: across three raids in the recorded raids there are 1079 confirmed
  * drinks against 230 eats, so charging them would invent several times more cost than eating has ever
  * accounted for, all of it fictional.
  * <p>
@@ -52,7 +52,7 @@ public class EatTrackerTest {
      * What a mouthful costs, now that there is no config field to correct it with.
      * <p>
      * Two ticks for the foods on the wiki's fast foods list, three for everything else, and nothing is
-     * four. Measured independently in {@code tfa-events-20261112-141632.log}: elder maul attacks at ticks
+     * four. Measured independently in a recorded raid: elder maul attacks at ticks
      * 333 and 344 around a combo eat at 336, an eleven tick gap, which is the weapon's six plus a
      * karambwan's two plus an anglerfish's three.
      */

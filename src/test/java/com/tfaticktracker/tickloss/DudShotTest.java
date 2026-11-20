@@ -6,9 +6,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * The four chat lines that mean a shot did not happen, exactly as debug-logs/ records them.
+ * The four chat lines that mean a shot did not happen, exactly as the recorded raids records them.
  * <p>
- * All four are in tfa-events-20261116-215240.log. The first form arrives with a colour tag on it, which is
+ * All four are in a recorded raid. The first form arrives with a colour tag on it, which is
  * why {@link DudShot} matches a substring and not the whole line.
  */
 public class DudShotTest {

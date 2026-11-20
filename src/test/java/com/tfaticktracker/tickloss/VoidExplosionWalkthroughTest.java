@@ -9,7 +9,7 @@ import org.junit.Test;
  * {@link AttackTimeline} does in each situation, so the rule can be read rather than inferred. Run it with
  * {@code ./gradlew test --tests '*VoidExplosionWalkthrough*' -i}.
  * <p>
- * Ticks are relative. A real run from debug-logs/tfa-events-20261115-000949.log has the explosions at 1597,
+ * Ticks are relative. A real run from a recorded raid has the explosions at 1597,
  * 1599, 1601, 1603, 1605 and 1607, with twisted bow shots on every tick in between.
  */
 public class VoidExplosionWalkthroughTest {

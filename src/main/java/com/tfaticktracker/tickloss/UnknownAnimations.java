@@ -32,7 +32,7 @@ final class UnknownAnimations {
      * <p>
      * Hitpoints experience lands on the tick of the attack itself, not when the hitsplat reaches the NPC.
      * Stated by the player and then measured, once the logger started recording xp: in
-     * debug-logs/tfa-events-20261119-010557.log all 11 hitpoints gains fall on the exact tick a glaive
+     * a recorded raid all 11 hitpoints gains fall on the exact tick a glaive
      * throw started, offset zero, none later. One tick of slack is kept anyway because attacktimer allows
      * the same, which suggests it can occasionally arrive late.
      * <p>

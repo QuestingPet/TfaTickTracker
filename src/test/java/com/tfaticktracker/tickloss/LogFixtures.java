@@ -19,7 +19,7 @@ import net.runelite.api.gameval.VarbitID;
  * Cuts a small, self-contained slice out of a debug log, so a scenario can be kept as a test instead of as
  * gigabytes of raid.
  * <p>
- * {@code debug-logs/} reached 3.7 GB and 72 files, which made the only end-to-end regression net both slow
+ * the recorded raids reached 3.7 GB and 72 files, which made the only end-to-end regression net both slow
  * (a minute per run) and impossible to check in. These fixtures replace it: each is one fight, or one
  * mechanic, trimmed to the lines that change the answer, and small enough to live in the repo.
  * <p>

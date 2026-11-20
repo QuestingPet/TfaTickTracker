@@ -95,7 +95,7 @@ final class RaidNpcs {
      * The HUD can show an extra bar beside the boss bar ({@link VarbitID#HPBAR_HUD_EXTRA_CURRENT} over
      * {@link VarbitID#HPBAR_HUD_EXTRA_BASE}), and at Bork that extra bar is the Smorks. This matters because the
      * Smorks is the one required NPC in the raid that never dies in a way the client can see: across 166 Bork
-     * fights in debug-logs/ it fired ActorDeath exactly zero times, played no death animation, never transformed,
+     * recorded fights it fired ActorDeath exactly zero times, played no death animation, never transformed,
      * and went on targeting players and dropping them right up to the room change. It simply despawns, 9 or 10
      * ticks after its last hitsplat, and those ticks were being charged as loss.
      * <p>
@@ -148,7 +148,7 @@ final class RaidNpcs {
      * P2's sword hitbox needs a tick and P3 does not.
      * <ul>
      *     <li>The Archive Guardian activates in place and gets no opening grace, so it was being charged a tick
-     *     it could not avoid. Over 204 fights in debug-logs/ the first attack comes at +1 from the
+     *     it could not avoid. Over 204 recorded fights the first attack comes at +1 from the
      *     TFA_GUARDIAN_START to TFA_GUARDIAN transform in 150 and later in the rest -- not once at +0. The
      *     first hit anyone lands is at +3 in 179 of 204, an attack launched at +1 plus two ticks of travel.</li>
      *     <li>P2's sword hitbox is the same: across 135 spawns NOBODY in the team attacks on the spawn tick,
@@ -173,7 +173,7 @@ final class RaidNpcs {
      * Animations after which the boss cannot be reached. The window ends when it turns up somewhere else, or
      * failing that on its next animation outside {@link #STAYS_UNATTACKABLE}.
      * <p>
-     * Melee is the honest test here, not hitsplats. Across 138 Ocellus quadrant moves in debug-logs/, melee
+     * Melee is the honest test here, not hitsplats. Across 138 Ocellus quadrant recorded moves, melee
      * attacks stop dead the tick QUADRANT_DESTROY_IN fires (75 land at -1, none at all from +0 to +18) and
      * resume at +19, while ranged attacks carry on until about +10 -- shots fired off as he leaves, which land
      * but say nothing about whether he is still reachable. The boss turns up in the next quadrant at +21 in
@@ -189,10 +189,10 @@ final class RaidNpcs {
                             AnimationID.NPC_OCELLUS_QUADRANT_DESTROY_IN,
                             // Phase 2 ends here. The animation is on Ocellus's own body, not on the Blade, and
                             // it lands within a tick of the Blade's last hitsplat (-1, 0 or +1 across every
-                            // instance in debug-logs/) -- tighter than waiting for the Blade to despawn at +1
+                            // instance across them all) -- tighter than waiting for the Blade to despawn at +1
                             // to +3.
                             AnimationID.NPC_OCELLUS_P2_TO_P3_PART1,
-                            // P1 ends here, 7 ticks before the transform in all 48 transitions in debug-logs/.
+                            // P1 ends here, 7 ticks before the transform in all 48 recorded transitions.
                             // The team actually stops attacking around -11, when the bar bottoms out, but that
                             // is not a clean marker: the bar often lands on 1 rather than 0.
                             AnimationID.NPC_OCELLUS_PHASE1_TRANSFORMATION,
@@ -216,7 +216,7 @@ final class RaidNpcs {
     /**
      * Ticks after the boss picks a target again before anyone can actually hit it. Zero almost everywhere --
      * the first attack lands on the targeting tick itself -- but a quadrant leap takes one more: measured over
-     * 156 leaps in debug-logs/, the first attack is at +1 from the re-target in 96 of them.
+     * 156 recorded leaps, the first attack is at +1 from the re-target in 96 of them.
      */
     static int reopenDelayTicks(RaidRoom room, int animationId) {
         return room == RaidRoom.OCELLUS && animationId == AnimationID.NPC_OCELLUS_QUADRANT_DESTROY_IN ? 1 : 0;
@@ -250,7 +250,7 @@ final class RaidNpcs {
      * Ocellus P4's void explosion, which resets your attack cooldown if you step off the tile it lands on.
      * <p>
      * It goes off six times, two ticks apart, and each one takes three ticks off the cooldown -- so a five
-     * tick weapon swings every two. Across debug-logs/ the graphic fires 3257 times, EVERY gap is exactly 2
+     * tick weapon swings every two. Across the recorded raids the graphic fires 3257 times, EVERY gap is exactly 2
      * ticks, 517 of 571 runs are exactly six long, and every run starts on a tick the siphon predicts.
      * <p>
      * Watched directly rather than predicted from the siphon animation and its hit delay, the way

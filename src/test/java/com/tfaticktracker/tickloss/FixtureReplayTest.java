@@ -18,7 +18,7 @@ import static org.junit.Assume.assumeTrue;
 /**
  * Real raid, kept as a test: every mechanic this project argued about, replayed from a checked-in slice.
  * <p>
- * This replaces {@code debug-logs/}, which grew to 3.7 GB across 72 files -- too big to check in, too slow to
+ * This replaces the recorded raids, which grew to 3.7 GB across 72 files -- too big to check in, too slow to
  * sweep, and gone as soon as anyone tidies their disk. Each fixture is a cut from one of those raids made by
  * {@link LogFixtures}, running through the same {@link LogReplay} the live client path mirrors, so a
  * regression in the window, the timeline or the adapters still fails here.
@@ -179,7 +179,7 @@ public class FixtureReplayTest {
     /**
      * Things that must hold of every segment of every fixture, whatever the numbers are.
      * <p>
-     * These came off the golden-file test that swept {@code debug-logs/}. They are the cheap sanity net that
+     * These came off the golden-file test that swept the recorded raids. They are the cheap sanity net that
      * catches a sign error or a double count long before anyone reads a total: an exact expectation above
      * tells you a number moved, these tell you it moved somewhere impossible.
      */

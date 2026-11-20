@@ -101,7 +101,7 @@ which pivots either way round: raiders holding rooms, or rooms holding raiders.
 room's **required** set is alive, because every boss presents its real target by *transforming*
 into it, so `NpcChanged` lands exactly on the tick the fight becomes live.
 
-Established from the event logs in `debug-logs/`:
+Established from the event logs in the recorded raids:
 
 | room | what happens | why the health bar alone is wrong |
 |---|---|---|
@@ -122,7 +122,7 @@ Hence the three conditions, and the two hand-maintained sets:
 ### The Smorks, and the raid's second health bar
 
 Bork is the one room with two fight-ending NPCs, and the Smorks is the one required NPC in the
-raid whose death the client cannot see directly. Across 166 Bork fights in `debug-logs/` it fires
+raid whose death the client cannot see directly. Across 166 Bork recorded fights it fires
 `ActorDeath` **zero** times, plays no death animation, never transforms, and goes on targeting
 players and dropping them right up to the room change. It just despawns, 9 or 10 ticks after its
 last hitsplat.
@@ -142,7 +142,7 @@ Measured over 158 fights, against the two alternatives:
 | "a straggler drops its target" | 2 | **1739** |
 
 That last row is a rule this file used to recommend, and it was wrong: the Smorks drops its
-target *throughout* the fight. In `tfa-events-20261101-090727.log` Bork dies at 1789 and the
+target *throughout* the fight. In `a recorded raid` Bork dies at 1789 and the
 Smorks goes to null at +4 with the player still hitting it at +10, +12 and +14.
 
 Scoped per room on purpose. Ocellus uses the same extra bar for something that is not an NPC at
@@ -206,7 +206,7 @@ A failing assertion prints the whole tick-by-tick run, so the scenario diagnoses
 **`FixtureReplayTest`** -- nine slices of real raids, checked into
 `src/test/resources/tickloss-fixtures/` and replayed through the real `FightWindowState` and the real
 `AttackTimeline`. It holds each one's exact numbers plus the invariants, so a rule change that shifts a past
-raid fails the build and has to be looked at. It needs no `debug-logs/` and runs in about a second:
+raid fails the build and has to be looked at. It needs no the recorded raids and runs in about a second:
 
 ```
 ./gradlew test --tests '*FixtureReplayTest*' -i
@@ -256,7 +256,7 @@ measuring something other than the plugin. There is now one implementation.
    | -5 | combo (5) | 0 | none |
    | +1 | karambwan (2) | 3 | 2 |
 
-   All of those are in `tfa-events-20261114-115313.log`, and the same arithmetic is the only thing that
+   All of those are in `a recorded raid`, and the same arithmetic is the only thing that
    explains combos spread over two ticks: ready 386, anglerfish 387, karambwan 388, bow 391; and ready 396,
    anglerfish 398, karambwan 399, bow 401.
 
@@ -301,7 +301,7 @@ cooldown whenever you were idle beforehand.
 It is not an attack, so it never increments `attacks`, and it adds nothing to the total: because
 `nextAttackTick` is left alone, the whole gap is already charged as the next attack's overshoot. What
 it changes is **attribution**, and that is the point. From tick 4740 of
-`debug-logs/tfa-events-20261116-215240.log`, a Zaryte crossbow (aspeed 6, rapid, so 5t):
+`a recorded raid`, a Zaryte crossbow (aspeed 6, rapid, so 5t):
 
 ```
 t4735  attack                      weapon clock ready at 4740
@@ -341,7 +341,7 @@ draws the line:
 The right column is the measurement stopping rather than the fight ending; billing it would charge
 for walking between rooms. Death is in the left column because `ActorDeath` on the local player
 fires on the tick the killing hitsplat lands — at tick 428 of
-`debug-logs/tfa-events-20261114-115313.log` it arrives with the hitsplat that did it — so the
+`a recorded raid` it arrives with the hitsplat that did it — so the
 ticks settled are ones you were alive, ready, and not attacking for.
 
 **Food is only charged for the ticks the fight actually had.** A mouthful banks its whole cost the
@@ -359,7 +359,7 @@ window genuinely is mostly loss. Logs where the replay sees no attacks at all no
 loss rather than 0%, which is the honest answer for a log with nothing in it.
 
 No attack debt accrues while the window is shut. Without that, the first attack of a fight was
-charged for the entire walk-in: in `debug-logs/tfa-events-20261112-141632.log` the room was
+charged for the entire walk-in: in `a recorded raid` the room was
 entered at tick 962, the fight only became live at 984, and the first attack at 986 scored 20
 lost ticks. An eat during a shut window is also discarded rather than banked.
 
@@ -379,7 +379,7 @@ so a `"Drink"` menu option is ignored outright.
 
 An eat off cooldown used to be credited as an invisible attack, on the reading that the eat animation
 replaces the attack animation. That was wrong: off-cooldown eats show no attack on the eat tick because
-no attack was made. In `tfa-events-20261113-172610.log` the eat at 847 is followed by a bow at 850 --
+no attack was made. In `a recorded raid` the eat at 847 is followed by a bow at 850 --
 three ticks of food delay -- and the hitsplats confirm nothing was fired at 847. The food's own delay is
 now left standing and the next attack attributes its overshoot to eating, so it stays out of the
 headline figure rather than being charged to you.
@@ -390,7 +390,7 @@ attributed to the mouthful in "lost to eating", which is a breakdown line. That 
 food list can be a fixed table in code with no config field behind it.
 
 Freezing a Xarth corpse costs no tick and does not touch the attack cooldown, so
-`HUMAN_SPELLCAST_GRASP` is vetoed. Measured across every log in `debug-logs/`: 309 grasp-then-weapon
+`HUMAN_SPELLCAST_GRASP` is vetoed. Measured across every log in the recorded raids: 309 grasp-then-weapon
 transitions never once went below 5t (the bow's own cooldown running underneath), while 291
 grasp-then-grasp transitions bottom out at 2t -- click speed, no cooldown at all.
 
@@ -407,7 +407,7 @@ worst in the rooms with no opening grace, where it was charged directly.
 Ocellus P3 leaps between quadrants, and the arena is empty for about ten ticks each time. The
 leap animation (`NPC_OCELLUS_PHASE3_UNLEASH_OUT_90F`) opens a `BOSS_UNATTACKABLE` state that
 closes on the boss's next real animation. Three leaps in
-`debug-logs/tfa-events-20261112-170638.log` at ticks 1764, 1871 and 1973 account for roughly 30
+`a recorded raid` at ticks 1764, 1871 and 1973 account for roughly 30
 of that phase's 51 reported lost ticks.
 
 Eat delays are **attributed, not erased**. The Gauntlet Performance Tracker does
@@ -445,7 +445,7 @@ reached and how long the raid took. It was added to `RaidState` for this and fil
 ./gradlew test --tests '*FixtureReplayTest*' -i
 ```
 
-**There is no longer any dependence on `debug-logs/`.** It reached 3.7 GB across 72 files, which made the
+**There is no longer any dependence on the recorded raids.** It reached 3.7 GB across 72 files, which made the
 only end-to-end net slow to run, impossible to check in, and gone the moment anyone tidied their disk. The
 fixtures in `src/test/resources/tickloss-fixtures/` replace it at 3.6 MB, and they are the authority on
 regressions now. The old golden file over the whole corpus is gone with it.
@@ -586,16 +586,16 @@ Two things had to be right for the reset branch to carry it:
 
 1. **An attack inside the cooldown always re-seeds it.** This used to sit behind a config toggle; the
    toggle is gone. Skipping the commit left the cooldown stale after a mid-cooldown cast, so the next
-   real attack read as late -- the end of Ocellus in `tfa-events-20261113-153822.log` reads 5 lost ticks
+   real attack read as late -- the end of Ocellus in `a recorded raid` reads 5 lost ticks
    when it re-seeds and 12 when it does not.
 2. **Picking out a different NPC counts as a new attack, not just a fresh animation.** `AnimationChanged`
    does not re-fire when an animation is re-set to the value it already holds, so the second cast of a
-   pair can produce no animation event at all -- 1022 and 1024 in `tfa-events-20261113-153822.log` share
+   pair can produce no animation event at all -- 1022 and 1024 in `a recorded raid` share
    one, but each picks a different corpse.
 
    A spotanim was tried here first and was wrong. Plenty of graphics have nothing to do with attacking:
    spotanim 4200 goes off every 5 ticks all through
-   `tfa-events-20261113-162514.log`, and during a blowpipe stretch at the Archive Guardian it invented
+   `a recorded raid`, and during a blowpipe stretch at the Archive Guardian it invented
    three early attacks at 2030, 2035 and 2040 while the real shots were landing on the even ticks.
 
 ### How attacktimer does it, and why we differ
@@ -625,12 +625,12 @@ after the second cast, and all four now cost nothing.
 
 It goes off six times, two ticks apart, and each one takes three ticks off your attack cooldown if you step
 off the tile it lands on -- so a five tick weapon swings every two. Ticks 1596 to 1608 of
-`tfa-events-20261115-000949.log` are seven twisted bow shots through one run.
+`a recorded raid` are seven twisted bow shots through one run.
 
 **Watched directly, not predicted.** `OcellusP3Detector` has to work it out from the siphon animation plus a
 hit delay, because it is tracking where every raider in the party will be standing. This only cares about
 one person, and for that person the explosion is simply visible: `VFX_VOID_CHAIN_EXPLOSION` fires 3257 times
-across `debug-logs/`, EVERY gap is exactly 2 ticks, 517 of 571 runs are exactly six long, and every run
+across the recorded raids, EVERY gap is exactly 2 ticks, 517 of 571 runs are exactly six long, and every run
 starts on a tick the siphon predicts. You cannot see another raider's, so any one of them is yours.
 
 The reduction is applied **whether or not you actually stepped off it**. That is the point: an explosion you
@@ -693,7 +693,7 @@ Each clause earns its place:
 - **Across the raid, not the room.** The tally never resets between rooms, only between raids, so one alch
   per room still adds up. The room closing is only when it is *said*.
 - **Within 1 tick.** Experience lands on the tick of the attack, not when the hitsplat reaches the NPC. Now
-  measured rather than assumed: in `tfa-events-20261119-010557.log`, the first log recorded after the logger
+  measured rather than assumed: in `a recorded raid`, the first log recorded after the logger
   learned to write xp, all 11 hitpoints gains land on the exact tick a glaive throw started, offset zero.
   The slack is for jitter. Hitsplats were considered as the signal and rejected: delayed by travel time, not
   guaranteed in every case, and with attacks in flight they can arrive out of order.
@@ -851,4 +851,4 @@ Run `./gradlew run` and enable the plugin. The overlay is top-left and the panel
 
 The event logger and the debug overlay are not on `master`: they were removed for release and live on
 the local `debug` branch, which is `master` plus one "Re-add debug tools" commit. Recording a raid, or
-cutting a new fixture from one, means working there. See `debug-logs/RESTORE-DEBUG-TOOLS.md`.
+cutting a new fixture from one, means working there. See `the recorded raidsRESTORE-DEBUG-TOOLS.md`.

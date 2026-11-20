@@ -123,11 +123,6 @@ public final class AttackTimeline {
         wasCounting = false;
     }
 
-    /** Drop a running cooldown, for when the measurement restarts rather than the fight. */
-    public void seed(int tick) {
-        nextAttackTick = Math.max(nextAttackTick, tick);
-    }
-
     public Result onTick(Input in) {
         final Result out = new Result();
         final boolean wasCountingBefore = wasCounting;
@@ -240,7 +235,7 @@ public final class AttackTimeline {
      *   cooldown at -5, combo both (5)       -> -5 + 5 = 0, instant
      *   cooldown at +1, eat a karambwan (2)  -> +1 + 2 = 3, two of which are the food's
      * </pre>
-     * Every one of those is in debug-logs/tfa-events-20261114-115313.log, and the same arithmetic explains the
+     * Every one of those is in a recorded raid, and the same arithmetic explains the
      * combos spread over two ticks that nothing simpler could: ready 386, anglerfish at 387, karambwan at 388,
      * bow at 391; and ready 396, anglerfish at 398, karambwan at 399, bow at 401.
      * <p>
@@ -289,12 +284,12 @@ public final class AttackTimeline {
         // explosions set, so taking three off it would claim you could have fired on a tick you could not,
         // and bill you for the difference on every single explosion.
         // The reset lands you ready on the tick AFTER the explosion, never on the explosion itself: across
-        // debug-logs/ every attack inside a void run sits at +1 or +2 from the blast and not one at +0, so
+        // the recorded raids every attack inside a void run sits at +1 or +2 from the blast and not one at +0, so
         // treating the blast tick as attackable bills a tick that was never on offer.
         //
         // It only shows when the last attack was more than MIN_RESET_GAP ago, since otherwise the
         // lastAttackTick term already lands on tick + 1. A forced idle before the dodge is exactly that: at
-        // tick 3951 of debug-logs/tfa-events-20261116-215240.log the previous attack was at 3949, the
+        // tick 3951 of a recorded raid the previous attack was at 3949, the
         // cooldown was cut to 3951, and the attack at 3954 was billed 3 when only 3952 and 3953 were usable.
         final int floor = Math.max(tick + 1, lastAttackTick + MIN_RESET_GAP);
 

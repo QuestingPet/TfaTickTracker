@@ -9,7 +9,7 @@ import java.util.Locale;
  * the tick reads as idling while the game has quietly put you on the weapon's full cooldown. The only signal
  * is the chat message, which is why this exists.
  * <p>
- * It was found from a raid: at tick 4740 of debug-logs/tfa-events-20261116-215240.log a Zaryte crossbow
+ * It was found from a raid: at tick 4740 of a recorded raid a Zaryte crossbow
  * (aspeed 6, rapid, so 5t) was fired with the wrong bolts equipped. The cooldown ran to 4745; an anglerfish
  * two ticks later pushed it to 4748; the next attack landed at 4748 exactly. Without knowing about the dud,
  * the three ticks the food cost read as nothing at all, because the cooldown looked long expired. The same

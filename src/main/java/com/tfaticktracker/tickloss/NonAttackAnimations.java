@@ -25,7 +25,7 @@ import java.util.Set;
  * statement available that the two lists built from different sources agree.
  * <p>
  * Scale of the original problem, measured from a real solo Archive Guardian attempt
- * (debug-logs/tfa-events-20261112-135412.log, ticks 513-750): 19 genuine attack animations against 31
+ * (a recorded raid, ticks 513-750): 19 genuine attack animations against 31
  * non-attacks -- 13 HUMAN_UNARMEDBLOCK, 13 HUMAN_ELDER_MAUL_BLOCK and 5 HUMAN_EAT.
  * <p>
  * <b>How a gap in a list is found.</b> Ask, of every animation, how often it BEGAN on a tick we were being
@@ -43,7 +43,7 @@ final class NonAttackAnimations {
 
     private static final Set<Integer> IDS = ImmutableSet.of(
             // Blocks and defence animations. The dominant false positive: a 237 tick Archive Guardian
-            // fight in debug-logs/tfa-events-20261112-135412.log had 26 of these against 19 real attacks.
+            // fight in a recorded raid had 26 of these against 19 real attacks.
             AnimationID.HUMAN_2H_AXE_DEFEND,
             AnimationID.HUMAN_APE_DEFEND,
             AnimationID.HUMAN_AXE_BLOCK,
@@ -72,7 +72,7 @@ final class NonAttackAnimations {
             AnimationID.HUMAN_RUBBER_CHICKEN_BLOCK,
             AnimationID.HUMAN_SCYTHE_BLOCK,
             // Spelled DEFENCE rather than BLOCK or DEFEND, so the generated list missed both. Shield blocks
-            // alone accounted for 217 of the "early attacks" across debug-logs/ -- each one re-seeding the
+            // alone accounted for 217 of the "early attacks" across the recorded raids -- each one re-seeding the
             // cooldown off a tick spent defending, which hides real loss.
             AnimationID.HUMAN_SHIELD_DEFENCE,
             AnimationID.HUMAN_SHADE_DEFENCE,
@@ -131,10 +131,10 @@ final class NonAttackAnimations {
             AnimationID.HUMAN_EAT_WITHSOUND,
             // Summoning a thrall. attacktimer treats this as a non-attack for the same reason, and it is the
             // classic case of an attack animation being masked -- seen twice in the Bork fight in
-            // debug-logs/tfa-events-20261112-161404.log
+            // a recorded raid
             AnimationID.HUMAN_SPELLCAST_RESURRECT,
             // Imbuing yourself, not an attack on anything. Seen between purging staff casts at Xarth in
-            // debug-logs/tfa-events-20261112-170638.log, where it was registering as an attack.
+            // a recorded raid, where it was registering as an attack.
             AnimationID.HUMAN_CAST_SELFIMBUE,
             // Freezing a Xarth corpse costs no tick at all, so it must not re-seed the attack cooldown. Across
             // every log, 309 grasp-then-weapon transitions never went below 5 ticks -- the weapon's own speed
@@ -143,7 +143,7 @@ final class NonAttackAnimations {
             // A dodge, reused by Ocellus P3
             AnimationID.HUMAN_YAMA_SHORTJUMP01,
             // A Dagon'hai mechanic, under a name from somewhere else entirely -- the raid reuses an agility
-            // arena animation. Seen 18 times in debug-logs/, never once with a target, so it has never
+            // arena animation. Seen 18 times in the recorded raids, never once with a target, so it has never
             // reached the attack test; listed anyway, because that is luck rather than design and the next
             // room like it may not be so tidy.
             AnimationID.AGILITYARENA_PLAYER_SPIKEDBACK_MERGE,

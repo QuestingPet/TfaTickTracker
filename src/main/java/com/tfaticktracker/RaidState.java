@@ -9,16 +9,13 @@ import com.tfaticktracker.events.RaidRoomChanged;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Player;
 import net.runelite.api.WorldView;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
-import net.runelite.api.events.PlayerSpawned;
 import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.events.VarClientStrChanged;
 import net.runelite.api.gameval.InterfaceID;
@@ -31,11 +28,9 @@ import net.runelite.client.util.Text;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static com.tfaticktracker.RaidRoom.LOBBY;
@@ -73,7 +68,8 @@ public class RaidState {
     @Getter
     private RaidRoom currentRoom;
     @Getter
-    private final Map<String, Raider> raiders = new HashMap<>(); // name -> raider
+    /** Raiders whose Player has actually loaded into the scene, which is not the same as being named. */
+    private final Set<String> loadedRaiders = new LinkedHashSet<>();
 
     private int prevRegion;
     private int prevPlane;
@@ -99,7 +95,7 @@ public class RaidState {
     private void clearState() {
         inRaid = false;
         currentRoom = null;
-        raiders.clear();
+        loadedRaiders.clear();
         prevRegion = -1;
         prevPlane = -1;
         newRaid = false;
@@ -127,23 +123,13 @@ public class RaidState {
         updateInRaid();
 
         if (!inRaid) {
-            raiders.clear();
+            loadedRaiders.clear();
             return;
         }
 
         // Keep trying until all raiders are loaded, e.g. if the plugin is turned on mid-raid
         if (raidersDirty || newRaid || !isAllRaidersLoaded(getRaiderNames())) {
             updateRaiders();
-        }
-    }
-
-    @Subscribe
-    public void onGameStateChanged(GameStateChanged event) {
-        if (event.getGameState() == GameState.LOADING) {
-            // If there are still raiders, they can't be dead anymore after loading.
-            for (Raider raider : raiders.values()) {
-                raider.setDead(false);
-            }
         }
     }
 
@@ -164,20 +150,6 @@ public class RaidState {
         if (inRaid) {
             raidersDirty = true;
         }
-    }
-
-    @Subscribe
-    public void onPlayerSpawned(PlayerSpawned event) {
-        // Players get new objects after a loading screen, so replace the stale raider
-        Player player = event.getPlayer();
-        if (player.getName() != null && raiders.containsKey(player.getName())) {
-            log.debug("Raider respawned: {}", player.getName());
-            raiders.put(player.getName(), new Raider(player));
-        }
-    }
-
-    public boolean isRaider(Actor actor) {
-        return raiders.containsKey(actor.getName());
     }
 
     /**
@@ -253,7 +225,7 @@ public class RaidState {
     }
 
     /**
-     * Update the loaded raiders to match the party names. Raiders still in the party keep their existing {@link Raider}.
+     * Update the set of loaded raiders to match the party names.
      */
     private void updateRaiders() {
         raidersDirty = false;
@@ -263,7 +235,7 @@ public class RaidState {
         if (raiderNames.isEmpty() || worldView == null) return;
 
         // Remove raiders no longer in the party
-        boolean changed = raiders.keySet().retainAll(raiderNames);
+        boolean changed = loadedRaiders.retainAll(raiderNames);
 
         // Add any raiders in the party that aren't loaded yet. A spectator isn't one, even if the name varcs are still
         // left over from their own last raid.
@@ -272,15 +244,15 @@ public class RaidState {
             if (player != null &&
                     player.getName() != null &&
                     !(isExternalSpectator && player == client.getLocalPlayer()) &&
-                    !raiders.containsKey(player.getName()) &&
+                    !loadedRaiders.contains(player.getName()) &&
                     raiderNames.contains(player.getName())) {
-                raiders.put(player.getName(), new Raider(player));
+                loadedRaiders.add(player.getName());
                 changed = true;
             }
         }
 
         if (changed) {
-            log.debug("Raiders changed: {} (party: {})", raiders.keySet(), raiderNames);
+            log.debug("Raiders changed: {} (party: {})", loadedRaiders, raiderNames);
         }
 
         if (!isAllRaidersLoaded(raiderNames)) {
@@ -291,12 +263,12 @@ public class RaidState {
                 client.getTickCount() - raidStartTick >= PARTY_WRITE_TIMEOUT_TICKS;
         if (newRaid && isPartyWritten) {
             log.debug("New raid");
-            eventBus.post(new RaidEntered(ImmutableList.copyOf(raiders.keySet())));
+            eventBus.post(new RaidEntered(ImmutableList.copyOf(loadedRaiders)));
             newRaid = false;
         }
     }
 
     private boolean isAllRaidersLoaded(Set<String> raiderNames) {
-        return !raiderNames.isEmpty() && raiders.keySet().containsAll(raiderNames);
+        return !raiderNames.isEmpty() && loadedRaiders.containsAll(raiderNames);
     }
 }

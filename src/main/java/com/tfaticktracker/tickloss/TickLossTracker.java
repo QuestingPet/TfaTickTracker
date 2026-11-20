@@ -28,8 +28,6 @@ import net.runelite.client.eventbus.Subscribe;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -115,8 +113,6 @@ public class TickLossTracker {
     @Getter
     private int raidDurationTicks;
 
-    private final Set<Integer> weaponsUsed = new HashSet<>();
-
     /** Everyone else's room summaries. This class never reads them; the overlay does. */
     @Getter
     private final TickLossParty party;
@@ -176,7 +172,6 @@ public class TickLossTracker {
         raidFinished = false;
         raidCompleted = false;
         raidDurationTicks = 0;
-        weaponsUsed.clear();
         fightWindow.reset();
         timeline.reset();
         eatTracker.reset();
@@ -216,10 +211,6 @@ public class TickLossTracker {
         return timeline.getGraceTicksRemaining();
     }
 
-    public Set<Integer> getWeaponsUsed() {
-        return Collections.unmodifiableSet(weaponsUsed);
-    }
-
     /**
      * Runs after the detectors and after {@link TfaTickTrackerPlugin}, so the room state for this tick is settled.
      */
@@ -227,9 +218,8 @@ public class TickLossTracker {
     public void onGameTick(GameTick e) {
         final int tick = client.getTickCount();
 
-        // Always on. In the mistake tracker this sat behind a config switch because it was a prototype
-        // living inside somebody else's plugin; here the plugin being enabled IS the switch, and a second
-        // one would only be a way to leave it installed and silently measuring nothing.
+        // Always on: the plugin being enabled IS the switch, and a second one would only be a way to
+        // leave it installed and silently measuring nothing.
         fightWindow.update(true);
 
         currentSpeed = weaponSpeeds.compute();
@@ -331,7 +321,7 @@ public class TickLossTracker {
      * <p>
      * Your own death ending the room is also how practice mode retries a boss. It re-runs a room without
      * ever leaving it, so the room change that used to be the only close never came: in
-     * debug-logs/tfa-events-20261118-153027.log the Archive Guardian ran from tick 35 to 372 with deaths at
+     * a recorded raid the Archive Guardian ran from tick 35 to 372 with deaths at
      * 220 and 340 and no room change between them, and all three attempts piled into one segment reading
      * 105 lost over 197 ticks.
      */
@@ -364,11 +354,6 @@ public class TickLossTracker {
         final Player local = client.getLocalPlayer();
         lastAttackAnimation = local == null ? -1 : local.getAnimation();
         lastSpeed = currentSpeed;
-
-        final int weaponId = weaponSpeeds.getWeaponId();
-        if (weaponId > 0) {
-            weaponsUsed.add(weaponId);
-        }
     }
 
     /**
@@ -407,7 +392,7 @@ public class TickLossTracker {
      * The animation alone cannot say. It lingers after the shot that produced it, and it does not re-fire
      * AnimationChanged when an attack repeats with the same id, so "an attack animation is showing" is true
      * both for a fresh attack and for one that happened two ticks ago. Polling that way invents attacks: in
-     * debug-logs/tfa-events-20261113-172610.log the blowpipe animation runs unbroken from 338 to 342 over
+     * a recorded raid the blowpipe animation runs unbroken from 338 to 342 over
      * shots at 338 and 340 -- the hitsplats land at 340, 342 and 347, so the shots are at 338, 340 and 345 --
      * and tick 342 was credited as an attack that never happened, which swallowed two of the three ticks
      * actually lost to the eat.
@@ -597,10 +582,6 @@ public class TickLossTracker {
 
     public int getTotalLost() {
         return segments.stream().mapToInt(SegmentStats::getLost).sum();
-    }
-
-    public int getTotalLostToEating() {
-        return segments.stream().mapToInt(SegmentStats::getLostToEating).sum();
     }
 
     public int getTotalAttacks() {

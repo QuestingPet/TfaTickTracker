@@ -32,7 +32,7 @@ public class AttackTimelineTest {
     /**
      * The blowpipe fires every 2 ticks and its animation does NOT re-fire AnimationChanged between shots, so
      * the plugin sees one animation event and eight attacks. Archive Guardian, ticks 2029-2042 of
-     * debug-logs/tfa-events-20261113-162514.log: hitsplats land on every even tick throughout.
+     * a recorded raid: hitsplats land on every even tick throughout.
      */
     @Test
     public void blowpipeRepeatsAreNotLoss() {
@@ -44,7 +44,7 @@ public class AttackTimelineTest {
 
     /**
      * The attack animation lingers after the shot. Reading "an attack animation is showing" as an attack
-     * invented one at tick 342 of debug-logs/tfa-events-20261113-172610.log, where the hitsplats show shots at
+     * invented one at tick 342 of a recorded raid, where the hitsplats show shots at
      * 338, 340 and 345 and nothing at 342 -- which swallowed two of the three ticks actually lost to the eat.
      */
     @Test
@@ -64,7 +64,7 @@ public class AttackTimelineTest {
     /**
      * The raid resets cooldowns, and so do plenty of ordinary situations, with any weapon. An early attack is
      * never loss and must ALWAYS re-seed, or the next attack wears the gap. End of Ocellus in
-     * debug-logs/tfa-events-20261113-153822.log reads 5 lost ticks when it re-seeds and 12 when it does not.
+     * a recorded raid reads 5 lost ticks when it re-seeds and 12 when it does not.
      */
     @Test
     public void earlyAttackIsNeverLossAndResetsTheCooldown() {
@@ -90,7 +90,7 @@ public class AttackTimelineTest {
     /**
      * Ocellus P3, where the void explosion resets the cooldown every two ticks. A 5 tick scythe swinging on
      * a 2 tick cadence is all early attacks and no loss at all: ticks 1596 to 1608 of
-     * debug-logs/tfa-events-20261115-000949.log are seven twisted bow shots two ticks apart.
+     * a recorded raid are seven twisted bow shots two ticks apart.
      */
     @Test
     public void ocellusP3ResetsCostNothingWhenYouKeepUp() {
@@ -114,7 +114,7 @@ public class AttackTimelineTest {
 
     /**
      * Freezing a corpse at Xarth comes in pairs, the second inside the first's cooldown.
-     * debug-logs/tfa-events-20261113-153822.log: bow 954, casts 960 and 962, bow 967 -- perfect play.
+     * a recorded raid: bow 954, casts 960 and 962, bow 967 -- perfect play.
      */
     @Test
     public void xarthFreezePairCostsNothing() {
@@ -140,7 +140,7 @@ public class AttackTimelineTest {
     // --- Ocellus P4's void explosion ---
     //
     // It goes off six times, two ticks apart, and each one takes three ticks off the cooldown, so a five
-    // tick weapon swings every two. Ticks 1596 to 1608 of debug-logs/tfa-events-20261115-000949.log are
+    // tick weapon swings every two. Ticks 1596 to 1608 of a recorded raid are
     // seven twisted bow shots through one run, explosions at 1597, 1599, 1601, 1603, 1605 and 1607.
 
     /** Taking every explosion costs nothing, whatever the weapon's own speed. */
@@ -166,7 +166,7 @@ public class AttackTimelineTest {
 
     /**
      * The rhythm is attack, move, attack, move, and the slots are two ticks apart. Miss one and the next
-     * chance is two ticks later, not one: inside a run 96.7% of the gaps in debug-logs/ are exactly 2 ticks
+     * chance is two ticks later, not one: inside a run 96.7% of the gaps in the recorded raids are exactly 2 ticks
      * and a miss goes to 4, never 3.
      */
     @Test
@@ -251,7 +251,7 @@ public class AttackTimelineTest {
     /**
      * Eating off cooldown costs one tick less than the food's delay, because the tick you eat on is one you
      * were going to spend on the attack anyway. Measured at the Archive Guardian in
-     * debug-logs/tfa-events-20261114-115313.log, where the weapon came off cooldown first:
+     * a recorded raid, where the weapon came off cooldown first:
      * ready 361, anglerfish at 362, bow at 364.
      */
     @Test
@@ -359,7 +359,7 @@ public class AttackTimelineTest {
     //
     // The cooldown runs on past zero, and food adds to it rather than starting a timer of its own. So the
     // longer you have been ready, the less a mouthful costs. All of these are measured shapes from
-    // debug-logs/tfa-events-20261114-115313.log.
+    // a recorded raid.
 
     /** Ready for one tick, then hard food: the counter goes to 2, so two ticks are lost. */
     @Test
@@ -441,7 +441,7 @@ public class AttackTimelineTest {
 
     /**
      * An attack made while the window was shut still seeds the cooldown, because it proves the exclusion's
-     * edge is a tick or two off. Ocellus P3 in debug-logs/tfa-events-20261113-001522.log: the exclusion ran to
+     * edge is a tick or two off. Ocellus P3 in a recorded raid: the exclusion ran to
      * 1671, an attack at 1669 was dropped, and 1673 was billed 2 ticks it should not have been.
      */
     @Test
@@ -493,7 +493,7 @@ public class AttackTimelineTest {
     // --- the fight ending while a cooldown has already run out ---------------------------------------
     //
     // Overshoot is charged by the next attack, so when the boss dies there is nothing to charge it to. These
-    // pin down what the close itself settles. Measured across the frame-logged raids in debug-logs/, this is
+    // pin down what the close itself settles. Measured across the frame-logged raids in the recorded raids, this is
     // about 150 ticks over 17 raids, nearly all of it one tick at an Ocellus P1 handover or a P3 quadrant.
 
     /** The case this came from: three ticks off cooldown when the quadrant dies is three ticks lost. */
@@ -630,7 +630,7 @@ public class AttackTimelineTest {
 
     // --- firing a bow with no ammo: no shot, but the cooldown runs -------------------------------------
     //
-    // Straight from debug-logs/tfa-events-20261116-215240.log, where it was found twice in marked Bork
+    // Straight from a recorded raid, where it was found twice in marked Bork
     // segments and then deliberately reproduced nine more times at the Archive Guardian. Nothing visible
     // marks the tick, so before this it read as idling -- and worse, it made food that landed on the dud's
     // cooldown look free, because the weapon clock said we had been ready for ages.
@@ -733,7 +733,7 @@ public class AttackTimelineTest {
     /**
      * A forced idle before the dodge must not be charged, and the blast tick is not attackable.
      * <p>
-     * Ocellus P3 at tick 3949 of debug-logs/tfa-events-20261116-215240.log: a 5t attack, one tick of
+     * Ocellus P3 at tick 3949 of a recorded raid: a 5t attack, one tick of
      * animation, then the explosion at 3951 with the next attack at 3954. The reset makes 3952 the first
      * usable tick, so 3952 and 3953 are the loss -- two, not the three it charged when the blast tick
      * counted as available.

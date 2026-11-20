@@ -62,7 +62,7 @@ public final class FightWindowState {
      * <p>
      * Death is in the first group because {@code ActorDeath} on the local player fires on the tick the killing
      * hitsplat lands, not when the respawn finishes -- verified at tick 428 of
-     * debug-logs/tfa-events-20261114-115313.log, where it arrives with the hitsplat that did it. So the ticks
+     * a recorded raid, where it arrives with the hitsplat that did it. So the ticks
      * being settled are ones you really were alive, ready, and not attacking for.
      */
     public static boolean endsTheFight(State state) {
@@ -221,7 +221,7 @@ public final class FightWindowState {
      * {@code present} is every NPC in the scene. A room's NPCs can spawn on the SAME tick as the room change,
      * and the spawn is dispatched first, so they get tested against the PREVIOUS room and thrown away -- which
      * left the window shut for a whole fight with no targets while the boss stood there. Seen at Bork and Xarth
-     * in debug-logs/tfa-events-20261112-211532.log (ticks 961 and 1431). Rescanning here fixes the race.
+     * in a recorded raid (ticks 961 and 1431). Rescanning here fixes the race.
      */
     public void roomChanged(RaidRoom newRoom, Iterable<int[]> present) {
         room = newRoom;
@@ -304,7 +304,7 @@ public final class FightWindowState {
 
     /**
      * A boss picking a player to fight is the most universal "it is live" signal there is -- it needs no
-     * per-boss animation. Measured per boss across debug-logs/, the first hit lands 1 to 8 ticks AFTER it
+     * per-boss animation. Measured per boss across the recorded raids, the first hit lands 1 to 8 ticks AFTER it
      * starts targeting someone, for every boss. So if it has picked a target, it is reachable.
      */
     public void npcTargetsPlayer(int tick, int index) {
@@ -377,7 +377,7 @@ public final class FightWindowState {
         // Order independent on purpose: bossDeathSeen only says that at least one fight-ending NPC has gone
         // down, and the window does not shut until endsFightAlive is empty, so whichever dies first the other
         // keeps it open. Bork is the room this matters in -- Bork dies first in 157 of the 159 fights in
-        // debug-logs/ that show both deaths and the Smorks dies first in 1, and in 6 more the Smorks goes down
+        // the recorded raids that show both deaths and the Smorks dies first in 1, and in 6 more the Smorks goes down
         // while Bork never does at all. Either way there is still tick loss to be had on the survivor.
         if (bossDeathSeen && endsFightAlive.isEmpty()) return State.BOSS_DEAD;
 
@@ -409,7 +409,7 @@ public final class FightWindowState {
      * Polled rather than latched from a change event, because a latch only ever learns about a bar that CHANGES
      * while we are listening. Switch the plugin on midway through a fight and the boss bar is already up, so no
      * event ever arrives and {@link #fightStarted} stays false for the whole room: in
-     * debug-logs/tfa-events-20261102-163705.log, whose first line is already inside the Archive Guardian, that
+     * a recorded raid, whose first line is already inside the Archive Guardian, that
      * accounted for 159 of the 169 attacks charged to NOT_STARTED across every log.
      */
     private void readHudVarbits(Tick in) {
@@ -493,9 +493,9 @@ public final class FightWindowState {
         if (moved && atRest && reopenAtTick == -1) {
             // Arriving is not the same as being hittable: it is reachable the tick AFTER it comes to rest,
             // always, whatever took it away. A quadrant lands at +17, is at rest at +18 and the first attack
-            // fires at +19 -- 53, 52 and 72 of the first three quadrants in debug-logs/, against 6 of 360 on
+            // fires at +19 -- 53, 52 and 72 of the first three quadrants in the recorded raids, against 6 of 360 on
             // the arrival tick itself. The P3 entry walk is the same shape one tick apart: in
-            // tfa-events-20261113-144608.log he moves at 1439, is at rest at 1440 and the first attack lands at
+            // a recorded raid he moves at 1439, is at rest at 1440 and the first attack lands at
             // 1441. This is why the delay lives here and not in reopenDelay, which belongs to the re-target
             // path: on that entry he picks a target at 1441 and is hittable on that very tick.
             reopenAtTick = in.tick + ARRIVAL_REOPEN_DELAY;

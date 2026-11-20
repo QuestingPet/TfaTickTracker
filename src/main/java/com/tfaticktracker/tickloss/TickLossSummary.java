@@ -5,7 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.tfaticktracker.RaidRoom;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

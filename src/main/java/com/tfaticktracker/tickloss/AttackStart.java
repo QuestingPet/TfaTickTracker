@@ -7,18 +7,18 @@ package com.tfaticktracker.tickloss;
  * <ul>
  *     <li><b>The animation alone cannot say.</b> It lingers after the shot that produced it, so "an attack
  *     animation is showing" is true both for a fresh attack and for one two ticks old. Polling that way
- *     invented an attack at tick 342 of debug-logs/tfa-events-20261113-172610.log that never happened.</li>
+ *     invented an attack at tick 342 of a recorded raid that never happened.</li>
  *     <li><b>{@code AnimationChanged} does not re-fire</b> when an animation repeats with the same id, so a
  *     blowpipe firing every 2 ticks produces one event and eight attacks.</li>
  *     <li><b>A spotanim is not an attack signal.</b> Plenty of graphics have nothing to do with attacking:
- *     spotanim 4200 goes off every 5 ticks all through debug-logs/tfa-events-20261113-162514.log and invented
+ *     spotanim 4200 goes off every 5 ticks all through a recorded raid and invented
  *     three early attacks during a blowpipe stretch.</li>
  *     <li><b>A re-click is not an attack either</b>, on its own. Used as a signal in its own right it added
- *     thousands of attacks across debug-logs/ and quietly erased real loss.</li>
+ *     thousands of attacks across the recorded raids and quietly erased real loss.</li>
  * </ul>
  * What works is the animation FRAME, which restarts on a new attack -- with one gap. Frames do not advance
  * one per tick, so a repeat can show the same frame twice: two undead grasps go out back to back at 2630 and
- * 2631 of debug-logs/tfa-events-20261115-000949.log and BOTH read frame 0, with 5 only arriving at 2632.
+ * 2631 of a recorded raid and BOTH read frame 0, with 5 only arriving at 2632.
  * Only there, where the frame says nothing either way, does picking out a different NPC break the tie.
  */
 public final class AttackStart {

@@ -11,10 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -511,7 +509,7 @@ public final class LogReplay {
             // grasps back to back both read frame 0. Switching to a different NPC is the third signal.
             // Logs written before frame logging have no frame at all. The retarget tie-break must not be
             // used there: with every frame reading -1 it would fire on every re-click, which across
-            // debug-logs/ invented thousands of attacks and erased real loss. Those logs get the animation
+            // the recorded raids invented thousands of attacks and erased real loss. Those logs get the animation
             // changing and nothing else, so repeats sharing an id are missed -- a known limit of old logs.
             final boolean haveFrames = myFrame != null;
             final boolean started = attackStart.started(

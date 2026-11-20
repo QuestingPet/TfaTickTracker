@@ -34,7 +34,7 @@ public class AttackStartTest {
     }
 
     /**
-     * The animation lingers after the shot. Tick 342 of debug-logs/tfa-events-20261113-172610.log was
+     * The animation lingers after the shot. Tick 342 of a recorded raid was
      * credited as an attack that never happened because the blowpipe animation was still running.
      */
     @Test
@@ -59,7 +59,7 @@ public class AttackStartTest {
 
     /**
      * Two undead grasps back to back, both reading frame 0 because frames do not advance one per tick.
-     * Ticks 2630 and 2631 of debug-logs/tfa-events-20261115-000949.log, each picking a different corpse --
+     * Ticks 2630 and 2631 of a recorded raid, each picking a different corpse --
      * 54676 then 54687. The second was missed, its five ticks were never committed, and the bow at 2636 was
      * billed a tick it could not have saved.
      */
@@ -79,7 +79,7 @@ public class AttackStartTest {
 
     /**
      * A re-click is NOT an attack on its own. Used as a signal in its own right it added thousands of attacks
-     * across debug-logs/ and quietly erased real loss, so it is consulted only when the frame says nothing.
+     * across the recorded raids and quietly erased real loss, so it is consulted only when the frame says nothing.
      */
     @Test
     public void retargetingWhileAnAnimationRunsOnIsNotAnAttack() {
@@ -91,7 +91,7 @@ public class AttackStartTest {
     /**
      * Ocellus P3 resets the cooldown, so a scythe swings again two ticks later. Same animation id both
      * times, so only the frame restarting shows it -- ticks 1635, 1637 and 1639 of
-     * debug-logs/tfa-events-20261115-000949.log, during a void explosion run.
+     * a recorded raid, during a void explosion run.
      */
     @Test
     public void ocellusP3ScytheSwingsBackToBack() {

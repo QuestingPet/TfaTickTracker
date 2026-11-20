@@ -53,8 +53,6 @@ public class TfaTickTrackerPlugin extends Plugin {
     /**
      * Where the raid itself is read: which room you are in, who is raiding with you, when it starts and ends.
      * <p>
-     * Carried over wholesale from the mistake tracker rather than rewritten. It is the part that took the
-     * longest to get right and none of it is specific to counting ticks.
      */
     @Inject
     private RaidState raidState;

@@ -90,10 +90,9 @@ public class TickLossPanel extends PluginPanel {
         header.setBackground(ColorScheme.DARK_GRAY_COLOR);
         header.setBorder(new EmptyBorder(0, 2, 8, 2));
 
-        // Fonts come from FontManager, the same as the mistake tracker's own panel, rather than from
-        // deriveFont on whatever the label inherited. Every RuneLite font is size 16, so any deriveFont
-        // with a number in it is shrinking the panel below the client's own text, which is how this ended
-        // up unreadable the first time.
+        // Fonts come from FontManager rather than deriveFont on whatever the label inherited. Every
+        // RuneLite font is size 16, so any deriveFont with a number in it shrinks the panel below the
+        // client's own text, which is how this ended up unreadable the first time.
         final JLabel title = new JLabel("TFA Tick Tracker");
         title.setForeground(ColorScheme.BRAND_ORANGE);
         title.setFont(FontManager.getRunescapeBoldFont());
@@ -482,18 +481,6 @@ public class TickLossPanel extends PluginPanel {
             if (segment != tracker.getCurrent()) finished.add(segment);
         }
         return finished;
-    }
-
-    private static int raidLost(List<SegmentStats> segments) {
-        int total = 0;
-        for (SegmentStats segment : segments) total += segment.getLost();
-        return total;
-    }
-
-    private static int raidCounted(List<SegmentStats> segments) {
-        int total = 0;
-        for (SegmentStats segment : segments) total += segment.getTicksCounting();
-        return total;
     }
 
     private static double efficiency(int lost, int counted) {
