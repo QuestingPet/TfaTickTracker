@@ -13,8 +13,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * The window's own rules, driven directly rather than through a raid.
  * <p>
- * {@link LogReplayTest} covers these across sixty recorded raids, but a log can only show what actually
- * happened in one. These are the orderings and edge cases that have gone wrong, written down so they stay
+ * {@link FixtureReplayTest} covers these across recorded raid slices, but a log can only show what
+ * actually happened in one. These are the orderings and edge cases that have gone wrong, written down so they stay
  * fixed.
  */
 public class FightWindowStateTest {
@@ -184,6 +184,22 @@ public class FightWindowStateTest {
 
         assertEquals(FightWindowState.State.OPENING, window.update(tick(0, RaidRoom.ARCHIVE_GUARDIAN)));
         assertEquals(FightWindowState.State.COUNTING, window.update(tick(1, RaidRoom.ARCHIVE_GUARDIAN)));
+    }
+
+    /**
+     * Moia spawns on the tick her health bar comes up, so the window opens on a target that was not there to
+     * click a tick earlier. Her minions open nothing: they arrive into a window she has already opened.
+     */
+    @Test
+    public void moiaNeedsATickBeforeSheCanBeHit() {
+        final FightWindowState window = new FightWindowState();
+        window.roomChanged(RaidRoom.MOIA, Collections.emptyList());
+        window.npcSeen(300, NpcID.TFA_MOIA);
+
+        assertEquals(FightWindowState.State.OPENING, window.update(tick(0, RaidRoom.MOIA)));
+
+        window.npcSeen(301, NpcID.TFA_MOIA_MINION);
+        assertEquals(FightWindowState.State.COUNTING, window.update(tick(1, RaidRoom.MOIA)));
     }
 
     // --- which closes settle an outstanding wait, and which merely stop measuring -----------------------

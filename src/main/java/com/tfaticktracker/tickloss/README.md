@@ -521,7 +521,7 @@ Audited against 55 event logs with three tests:
 | Bork | 166 | health bar | `ActorDeath` **and** the extra bar | good |
 | Xarth | 149 | health bar | `ActorDeath`, not the bar (14t late) | good |
 | Ocellus | 146 | per phase, see above | `ActorDeath` on P3 | good, P1/P2/P3 split |
-| Moia | 109 | health bar | `ActorDeath` | good |
+| Moia | 109 | health bar, which is also her spawn, +1 | `ActorDeath` | good |
 | Dreadnoth | 52 | health bar | minions, never `ActorDeath` | fair, none logged since Nov 4 |
 | Ezekiel | 11 | health bar | `ActorDeath` | **thin** |
 | Dagonhai | 2 | health bar | `ActorDeath` on the leader | **essentially unverified** |
@@ -550,9 +550,17 @@ each needed its own fix.
 |---|---|---|---|
 | Archive Guardian | the `TFA_GUARDIAN` transform | +1 | first attack never at +0 across 204 fights |
 | Ocellus P2 | the sword hitbox spawn | +1 | nobody in the team at +0 across 135 spawns; 110 at +1 |
+| Moia | her spawn, which is also her bar | +1 | first attack never at +0 across 6 rooms |
 | after any leap or walk | the tick it came to rest | +1 | 6 of 360 quadrants at +0; P3 entry rests at 1440, first attack 1441 |
 
-The first two are `RaidNpcs.START_DELAY`, keyed on the NPC that opens the window rather than the room,
+Moia is the one boss who is not already standing in the room when you walk in, and the three signals
+land on the same tick: she spawns, her health bar comes up, and the window opens. So the opening tick is
+one where the target did not exist a tick earlier and there was nothing on screen to click. Everywhere
+else the boss spawns on room entry and the bar follows some 20 ticks later, which is why +0 is real
+there -- the first attack is at +0 in all 5 logged Xarth rooms and never at +0 in any of the 6 Moia
+ones. Keyed on Moia alone: her minions arrive 3 ticks later, into a window she has already opened.
+
+The first three are `RaidNpcs.START_DELAY`, keyed on the NPC that opens the window rather than the room,
 because within Ocellus P2 needs a tick and P3 does not. The third is `ARRIVAL_REOPEN_DELAY` in
 `FightWindow.checkArrived`, and it is deliberately separate from `reopenDelayTicks`: arrival and
 re-targeting are two different signals that happen to be a tick apart. On the P3 entry Ocellus comes to

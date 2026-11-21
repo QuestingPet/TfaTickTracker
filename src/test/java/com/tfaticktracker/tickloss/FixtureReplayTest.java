@@ -41,7 +41,7 @@ public class FixtureReplayTest {
             {"bork-dud-shot-and-eat", "tfa-events-20261116-215240.log", "4672", "4965",
              "A crossbow fired with no ammo, then an anglerfish onto the cooldown it started."},
             {"moia", "tfa-events-20261116-215240.log", "2430", "2700",
-             "Ordinary health-bar room, for the plain open and close case."},
+             "The one boss who spawns as her bar comes up, so her first tick cannot be attacked."},
             {"xarth-corpse-freeze", "tfa-events-20261116-215240.log", "2680", "2960",
              "Freezing a corpse resets the cooldown, so attacks land early and must not be charged."},
             {"ocellus-all-phases", "tfa-events-20261116-215240.log", "2960", "4010",
@@ -69,7 +69,7 @@ public class FixtureReplayTest {
             // bork-dud-shot-and-eat
             {1, 45, 247, 43, 0, 3, 5, 1},
             // moia
-            {1, 20, 194, 38, 0, 0, 0, 0},
+            {1, 19, 193, 38, 0, 0, 0, 0},
             // xarth-corpse-freeze
             {1, 5, 195, 42, 8, 0, 0, 0},
             // ocellus-all-phases

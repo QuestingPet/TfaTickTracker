@@ -158,15 +158,23 @@ final class RaidNpcs {
      *     first hit anyone lands is at +3 in 179 of 204, an attack launched at +1 plus two ticks of travel.</li>
      *     <li>P2's sword hitbox is the same: across 135 spawns NOBODY in the team attacks on the spawn tick,
      *     110 of them go at +1, and the first hitsplat on the sword is at +3 in 87.</li>
+     *     <li>Moia needs it for a third reason that comes to the same thing: she is the one boss who is not
+     *     already standing in the room when you walk in. She spawns on the very tick her health bar comes up,
+     *     so the window opens on a target that did not exist a tick earlier and cannot be clicked yet. Across
+     *     6 logged rooms the first attack is at +1 or later in every one, never at +0.</li>
      * </ul>
      * This is not leeway, it is the target not being there yet, which is why it is separate from the start
-     * grace. Most targets need none: on the tick their health bar comes up the first attack is already at +0
-     * in 98 of 127 Ocellus rooms, 79 of 134 Xarth and 27 of 33 Dreadnoth.
+     * grace. Most targets need none, and the reason is visible in the logs: at Bork, Xarth, Ezekiel and
+     * Dreadnoth the boss spawns on room entry and the bar comes up some 20 ticks later, so by the time the
+     * window opens it has been clickable all along -- the first attack is at +0 in all 5 logged Xarth rooms.
      */
     private static final Map<Integer, Integer> START_DELAY = ImmutableMap.<Integer, Integer>builder()
             .put(NpcID.TFA_GUARDIAN, 1)
             .put(NpcID.TFA_GUARDIAN_UNSHIELDED, 1)
             .put(NpcID.TFA_OCELLUS_P2_SWORD_HITBOX, 1)
+            // Keyed on Moia alone, not her minions: she is what opens the window, and they spawn 3 ticks
+            // after her into a window she has already opened.
+            .put(NpcID.TFA_MOIA, 1)
             .build();
 
     /** @return ticks to wait after this NPC opens the window before counting */
