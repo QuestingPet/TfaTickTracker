@@ -1,0 +1,2 @@
+# Recorded raid slices: kept byte for byte, never line-ending converted
+src/test/resources/tickloss-fixtures/*.log -text

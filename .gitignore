@@ -11,3 +11,6 @@ nbproject/
 *.iml
 *.log
 debug-logs/
+
+# ...except the test fixtures, which the suite asserts against and so have to be in the repo
+!src/test/resources/tickloss-fixtures/*.log
